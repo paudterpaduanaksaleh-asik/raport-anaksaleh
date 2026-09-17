@@ -33,10 +33,14 @@ app.add_middleware(
 
 # Static files directory
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-os.makedirs(STATIC_DIR, exist_ok=True)
-os.makedirs(os.path.join(STATIC_DIR, "uploads"), exist_ok=True)
+try:
+    os.makedirs(STATIC_DIR, exist_ok=True)
+    os.makedirs(os.path.join(STATIC_DIR, "uploads"), exist_ok=True)
+except Exception:
+    pass
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ================= DATA MODELS =================
 class LoginRequest(BaseModel):

@@ -84,8 +84,18 @@ DEFAULT_RAPORT = [
 
 class DatabaseManager:
     def __init__(self):
-        self.data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-        os.makedirs(self.data_dir, exist_ok=True)
+        # Determine writable directory (use /tmp if running in serverless environment)
+        default_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+        try:
+            os.makedirs(default_dir, exist_ok=True)
+            self.data_dir = default_dir
+        except Exception:
+            self.data_dir = "/tmp"
+            try:
+                os.makedirs(self.data_dir, exist_ok=True)
+            except Exception:
+                pass
+
         self.local_file = os.path.join(self.data_dir, "local_db.json")
         
         self.sheets_client = None

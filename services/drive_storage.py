@@ -14,8 +14,17 @@ logger = logging.getLogger("drive_storage")
 
 class StorageManager:
     def __init__(self):
-        self.upload_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "uploads")
-        os.makedirs(self.upload_dir, exist_ok=True)
+        default_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "uploads")
+        try:
+            os.makedirs(default_dir, exist_ok=True)
+            self.upload_dir = default_dir
+        except Exception:
+            self.upload_dir = "/tmp/uploads"
+            try:
+                os.makedirs(self.upload_dir, exist_ok=True)
+            except Exception:
+                pass
+
         self.drive_service = None
         self.folder_id = os.getenv("DRIVE_FOLDER_ID", "")
         self._init_drive()
