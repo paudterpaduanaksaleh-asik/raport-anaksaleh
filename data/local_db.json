@@ -1,0 +1,278 @@
+{
+  "users": [
+    {
+      "userId": "USR-ADM-01",
+      "username": "admin",
+      "password": "admin123",
+      "namaLengkap": "Administrator Portal",
+      "role": "ADMIN",
+      "kelompokDiampu": "SEMUA",
+      "kontakWa": "081234567890",
+      "status": "AKTIF"
+    },
+    {
+      "userId": "USR-KPS-01",
+      "username": "kepsek",
+      "password": "kepsek123",
+      "namaLengkap": "Hj. Siti Aminah, M.Pd.",
+      "role": "KEPSEK",
+      "kelompokDiampu": "SEMUA",
+      "kontakWa": "081234567891",
+      "status": "AKTIF"
+    },
+    {
+      "userId": "USR-GUR-01",
+      "username": "bunda.nurul",
+      "password": "guru123",
+      "namaLengkap": "Bunda Nurul Hidayah, S.Pd.",
+      "role": "WALI_KELAS",
+      "kelompokDiampu": "TK-A1",
+      "kontakWa": "081234567892",
+      "status": "AKTIF"
+    },
+    {
+      "userId": "USR-GUR-02",
+      "username": "bunda.fatimah",
+      "password": "guru123",
+      "namaLengkap": "Bunda Fatimah Az-Zahra, S.Pd.",
+      "role": "WALI_KELAS",
+      "kelompokDiampu": "TK-B1",
+      "kontakWa": "081234567893",
+      "status": "AKTIF"
+    },
+    {
+      "userId": "USR-GUR-03",
+      "username": "bunda.aisyah",
+      "password": "guru123",
+      "namaLengkap": "Bunda Aisyah Humaira, S.Pd.",
+      "role": "WALI_KELAS",
+      "kelompokDiampu": "KB-A",
+      "kontakWa": "081234567894",
+      "status": "AKTIF"
+    },
+    {
+      "userId": "USR-GUR-04",
+      "username": "bunda.maryam",
+      "password": "guru123",
+      "namaLengkap": "Bunda Maryam Shalihah, S.Pd.",
+      "role": "WALI_KELAS",
+      "kelompokDiampu": "DC-1",
+      "kontakWa": "081234567895",
+      "status": "AKTIF"
+    }
+  ],
+  "murid": [
+    {
+      "nis": "202601001",
+      "namaLengkap": "Muhammad Al-Fatih Pratama",
+      "namaPanggilan": "Fatih",
+      "jenisKelamin": "L",
+      "jenjang": "TK-A",
+      "idKelompok": "TK-A1",
+      "tempatLahir": "Jakarta",
+      "tanggalLahir": "2021-03-15",
+      "namaAyah": "Hendra Pratama",
+      "namaIbu": "Rina Kartika",
+      "kontakOrtu": "081122334455",
+      "status": "AKTIF",
+      "alamat": "Jl. Melati No. 12, Kebayoran",
+      "pin": "150321"
+    },
+    {
+      "nis": "202601002",
+      "namaLengkap": "Aisyah Zahira Putri",
+      "namaPanggilan": "Zahira",
+      "jenisKelamin": "P",
+      "jenjang": "TK-A",
+      "idKelompok": "TK-A1",
+      "tempatLahir": "Jakarta",
+      "tanggalLahir": "2021-05-20",
+      "namaAyah": "Rudi Hartono",
+      "namaIbu": "Siti Nurhaliza",
+      "kontakOrtu": "081122334456",
+      "status": "AKTIF",
+      "alamat": "Jl. Mawar Indah Blok B4",
+      "pin": "200521"
+    },
+    {
+      "nis": "202601003",
+      "namaLengkap": "Kenzo Ahmad Rayyan",
+      "namaPanggilan": "Kenzo",
+      "jenisKelamin": "L",
+      "jenjang": "TK-B",
+      "idKelompok": "TK-B1",
+      "tempatLahir": "Depok",
+      "tanggalLahir": "2020-08-10",
+      "namaAyah": "Dedi Setiadi",
+      "namaIbu": "Ratna Sari",
+      "kontakOrtu": "081122334457",
+      "status": "AKTIF",
+      "alamat": "Jl. Anggrek Raya No. 45",
+      "pin": "100820"
+    },
+    {
+      "nis": "202601004",
+      "namaLengkap": "Maryam Khadijah Azzahra",
+      "namaPanggilan": "Maryam",
+      "jenisKelamin": "P",
+      "jenjang": "TK-B",
+      "idKelompok": "TK-B1",
+      "tempatLahir": "Tangerang",
+      "tanggalLahir": "2020-11-25",
+      "namaAyah": "Yusuf Mansur",
+      "namaIbu": "Fatimah Zahra",
+      "kontakOrtu": "081122334458",
+      "status": "AKTIF",
+      "alamat": "Perumahan Cempaka Hijau No. 7",
+      "pin": "251120"
+    },
+    {
+      "nis": "202601005",
+      "namaLengkap": "Arkan Bilal Ramadhan",
+      "namaPanggilan": "Bilal",
+      "jenisKelamin": "L",
+      "jenjang": "Playgroup (PG)",
+      "idKelompok": "KB-A",
+      "tempatLahir": "Jakarta",
+      "tanggalLahir": "2022-04-12",
+      "namaAyah": "Fajar Ramadhan",
+      "namaIbu": "Dewi Lestari",
+      "kontakOrtu": "081122334459",
+      "status": "AKTIF",
+      "alamat": "Jl. Kenanga Timur No. 3",
+      "pin": "120422"
+    },
+    {
+      "nis": "202601006",
+      "namaLengkap": "Hafizhah Humaira Syakirah",
+      "namaPanggilan": "Maira",
+      "jenisKelamin": "P",
+      "jenjang": "Daycare",
+      "idKelompok": "DC-1",
+      "tempatLahir": "Jakarta",
+      "tanggalLahir": "2023-01-08",
+      "namaAyah": "Agus Santoso",
+      "namaIbu": "Laila Majnun",
+      "kontakOrtu": "081122334460",
+      "status": "AKTIF",
+      "alamat": "Jl. Flamboyan No. 18",
+      "pin": "080123"
+    }
+  ],
+  "kelompok": [
+    {
+      "idKelompok": "TK-A1",
+      "namaKelompok": "Kelas Ar-Rahman (TK-A)",
+      "jenjang": "TK-A",
+      "idWaliKelas": "USR-GUR-01",
+      "namaWaliKelas": "Bunda Nurul Hidayah, S.Pd.",
+      "kapasitas": 20,
+      "tahunAjaran": "2025/2026",
+      "status": "AKTIF",
+      "jumlahMurid": 2
+    },
+    {
+      "idKelompok": "TK-B1",
+      "namaKelompok": "Kelas Al-Ikhlas (TK-B)",
+      "jenjang": "TK-B",
+      "idWaliKelas": "USR-GUR-02",
+      "namaWaliKelas": "Bunda Fatimah Az-Zahra, S.Pd.",
+      "kapasitas": 20,
+      "tahunAjaran": "2025/2026",
+      "status": "AKTIF",
+      "jumlahMurid": 2
+    },
+    {
+      "idKelompok": "KB-A",
+      "namaKelompok": "Kelas Al-Kautsar (Playgroup)",
+      "jenjang": "Playgroup (PG)",
+      "idWaliKelas": "USR-GUR-03",
+      "namaWaliKelas": "Bunda Aisyah Humaira, S.Pd.",
+      "kapasitas": 15,
+      "tahunAjaran": "2025/2026",
+      "status": "AKTIF",
+      "jumlahMurid": 1
+    },
+    {
+      "idKelompok": "DC-1",
+      "namaKelompok": "Bintang Cilik (Daycare)",
+      "jenjang": "Daycare",
+      "idWaliKelas": "USR-GUR-04",
+      "namaWaliKelas": "Bunda Maryam Shalihah, S.Pd.",
+      "kapasitas": 10,
+      "tahunAjaran": "2025/2026",
+      "status": "AKTIF",
+      "jumlahMurid": 1
+    }
+  ],
+  "tahun_ajaran": [
+    {
+      "idTahun": "TA-2025-GANJIL",
+      "namaTahun": "2025/2026",
+      "semester": "Ganjil (Semester 1)",
+      "statusAktif": "AKTIF",
+      "statusAksesOrtu": "DIBUKA"
+    },
+    {
+      "idTahun": "TA-2025-GENAP",
+      "namaTahun": "2025/2026",
+      "semester": "Genap (Semester 2)",
+      "statusAktif": "NONAKTIF",
+      "statusAksesOrtu": "DITUTUP"
+    },
+    {
+      "idTahun": "TA-2026-GANJIL",
+      "namaTahun": "2026/2027",
+      "semester": "Ganjil (Semester 1)",
+      "statusAktif": "NONAKTIF",
+      "statusAksesOrtu": "DITUTUP"
+    }
+  ],
+  "raport": [
+    {
+      "idRaport": "RAP-202601001-01",
+      "nis": "202601001",
+      "idKelompok": "TK-A1",
+      "tahunAjaran": "2025/2026",
+      "semester": "Ganjil (Semester 1)",
+      "urlPdf": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "fileId": "demo_pdf_01",
+      "catatanPerkembangan": "Ananda Fatih menunjukkan perkembangan motorik dan sosial yang sangat baik, mandiri saat berwudhu dan antusias dalam hafalan surat pendek.",
+      "statusApproval": "DISETUJUI",
+      "catatanRevisi": "",
+      "uploaderUser": "Bunda Nurul Hidayah, S.Pd.",
+      "reviewedBy": "Hj. Siti Aminah, M.Pd.",
+      "tanggalReview": "15/09/2026 09:30",
+      "tanggalDilihat": "16/09/2026 14:20",
+      "namaWaliKonfirmasi": "Hendra Pratama (Ayah)",
+      "sudahDilihat": true
+    },
+    {
+      "idRaport": "RAP-202601002-01",
+      "nis": "202601002",
+      "idKelompok": "TK-A1",
+      "tahunAjaran": "2025/2026",
+      "semester": "Ganjil (Semester 1)",
+      "urlPdf": "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+      "fileId": "demo_pdf_02",
+      "catatanPerkembangan": "Ananda Zahira sangat kreatif dalam mewarnai dan memiliki daya ingat kuat dalam mengenal huruf hijaiyah.",
+      "statusApproval": "DIAJUKAN",
+      "catatanRevisi": "",
+      "uploaderUser": "Bunda Nurul Hidayah, S.Pd.",
+      "reviewedBy": "",
+      "tanggalReview": "",
+      "tanggalDilihat": "",
+      "namaWaliKonfirmasi": "",
+      "sudahDilihat": false
+    }
+  ],
+  "logs": [
+    {
+      "timestamp": "17/09/2026 18:38:54",
+      "user": "SYSTEM",
+      "role": "SETUP",
+      "aktivitas": "Inisialisasi Database",
+      "detail": "Database Raport Digital Anak Saleh siap digunakan."
+    }
+  ]
+}

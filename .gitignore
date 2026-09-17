@@ -5,3 +5,17 @@ node_modules/
 
 # Clasp auth token (local credentials)
 .clasprc.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Credentials & environment
+.env
+service_account.json
+credentials.json
+token.json
