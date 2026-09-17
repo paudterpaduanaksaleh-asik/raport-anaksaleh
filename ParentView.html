@@ -1,0 +1,84 @@
+<!-- ==========================================
+     PARENT / ORANG TUA PORTAL VIEW
+     ========================================== -->
+<div id="parentView" class="hidden space-y-6">
+  <!-- Parent Greeting Banner -->
+  <div class="bg-gradient-to-r from-amber-500 via-sunny-500 to-emerald-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute -right-6 -bottom-6 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/30 animate-float">
+          🌟
+        </div>
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-0.5 bg-white/20 rounded-full text-xs font-semibold tracking-wide backdrop-blur-sm mb-1">
+            <i class="fas fa-heart text-rose-200"></i> Portal Ayah & Bunda
+          </div>
+          <h2 id="parentChildNameHeader" class="text-2xl md:text-3xl font-extrabold font-brand">Ananda ...</h2>
+          <p id="parentChildClassHeader" class="text-amber-100 text-sm mt-0.5">PG - TK - DAYCARE Anak Saleh</p>
+        </div>
+      </div>
+      <button onclick="loadParentData()" class="self-start md:self-auto px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-sm font-medium transition flex items-center gap-2 backdrop-blur-sm">
+        <i class="fas fa-sync-alt"></i> Segarkan Halaman
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile & Semester Status Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Student Identity Card -->
+    <div class="glass-card rounded-2xl p-5 border border-white/80 space-y-4">
+      <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+        <i class="fas fa-id-badge text-teal-600"></i> Identitas Ananda
+      </h3>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Nama Lengkap</span>
+          <span id="pProfileFullName" class="font-semibold text-slate-800 text-right">-</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Nama Panggilan</span>
+          <span id="pProfileNickName" class="font-semibold text-slate-800">-</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">NIS / NISN</span>
+          <span id="pProfileNis" class="font-semibold text-slate-800">-</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Jenjang & Kelas</span>
+          <span id="pProfileClass" class="font-semibold text-teal-700">-</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-100">
+          <span class="text-slate-500">Orang Tua / Wali</span>
+          <span id="pProfileParent" class="font-semibold text-slate-800 text-right">-</span>
+        </div>
+      </div>
+
+      <div class="bg-teal-50 rounded-xl p-3 border border-teal-100 text-xs text-teal-800 flex items-start gap-2.5">
+        <i class="fas fa-info-circle text-teal-600 mt-0.5 text-sm"></i>
+        <span>Raport digital ini merupakan dokumen resmi perkembangan ananda dari PG-TK-DAYCARE Anak Saleh.</span>
+      </div>
+    </div>
+
+    <!-- Report Cards Collection -->
+    <div class="md:col-span-2 space-y-4">
+      <div class="glass-card rounded-2xl p-5 border border-white/80">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+            <i class="fas fa-book-open text-amber-500"></i> Berkas Raport & Lembar Perkembangan
+          </h3>
+          <span id="parentAccessBadge" class="text-xs px-2.5 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800">
+            Akses Dibuka
+          </span>
+        </div>
+
+        <!-- Dynamic List of Raport -->
+        <div id="parentReportsList" class="space-y-4">
+          <div class="p-8 text-center text-slate-400">
+            <i class="fas fa-spinner fa-spin mr-2"></i> Memuat berkas raport ananda...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

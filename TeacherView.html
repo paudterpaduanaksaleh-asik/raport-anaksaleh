@@ -1,0 +1,86 @@
+<!-- ==========================================
+     TEACHER / WALI KELAS DASHBOARD VIEW
+     ========================================== -->
+<div id="teacherView" class="hidden space-y-6">
+  <!-- Teacher Header Banner -->
+  <div class="bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute -right-6 -bottom-6 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold tracking-wide backdrop-blur-sm mb-2">
+          <i class="fas fa-chalkboard-teacher text-amber-300"></i> Ruang Kerja Wali Kelas
+        </div>
+        <h2 id="teacherClassTitle" class="text-2xl md:text-3xl font-extrabold font-brand">Kelas ...</h2>
+        <p id="teacherWelcomeSub" class="text-sky-100 text-sm mt-1">Selamat datang, Ustadz/Ustadzah. Silakan kelola berkas raport siswa.</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/20 text-center md:text-right">
+        <p class="text-xs text-sky-200">Tahun Pelajaran Aktif</p>
+        <p id="teacherActiveTA" class="text-base font-bold text-white mt-0.5">...</p>
+      </div>
+    </div>
+
+    <!-- Teacher Class Stats Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/20">
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
+        <p class="text-xs text-sky-200">Total Siswa</p>
+        <p id="teacherStatTotal" class="text-xl font-bold mt-0.5">0</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
+        <p class="text-xs text-emerald-200">Raport Diunggah</p>
+        <p id="teacherStatUploaded" class="text-xl font-bold mt-0.5">0</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
+        <p class="text-xs text-amber-200">Belum Diunggah</p>
+        <p id="teacherStatPending" class="text-xl font-bold mt-0.5">0</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
+        <p class="text-xs text-teal-200">Dilihat Orang Tua</p>
+        <p id="teacherStatViewed" class="text-xl font-bold mt-0.5">0</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Class Student Table Card -->
+  <div class="glass-card rounded-2xl p-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div>
+        <h3 class="font-bold text-lg text-slate-800">Daftar Siswa & Berkas Raport</h3>
+        <p class="text-xs text-slate-500">Unggah berkas PDF raport serta catatan perkembangan untuk setiap ananda.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input type="text" id="teacherSearchInput" onkeyup="filterTeacherTable()" placeholder="Cari nama / NIS..." class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none w-48">
+        <select id="teacherStatusFilter" onchange="filterTeacherTable()" class="px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500">
+          <option value="ALL">Semua Status</option>
+          <option value="UPLOADED">Sudah Diunggah</option>
+          <option value="PENDING">Belum Diunggah</option>
+        </select>
+        <button onclick="loadTeacherClassData()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition flex items-center gap-1.5">
+          <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Student List Table -->
+    <div class="overflow-x-auto rounded-xl border border-slate-200">
+      <table class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
+            <th class="p-3">NIS</th>
+            <th class="p-3">Nama Siswa</th>
+            <th class="p-3">Orang Tua</th>
+            <th class="p-3 text-center">Status Raport</th>
+            <th class="p-3 text-center">Waktu Akses Ortu</th>
+            <th class="p-3 text-center">Aksi Raport</th>
+          </tr>
+        </thead>
+        <tbody id="teacherStudentsTableBody" class="divide-y divide-slate-200">
+          <tr>
+            <td colspan="6" class="p-6 text-center text-slate-400">
+              <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data siswa kelas...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Raport - PG TK DAYCARE Anak Saleh</title>
+  <?!= include('Styles'); ?>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex flex-col min-h-screen">
+
+  <!-- ==========================================
+       TOP NAVBAR
+       ========================================== -->
+  <header class="glass-header sticky top-0 z-40 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- School Logo & Branding -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white text-xl font-bold shadow-md">
+          🌱
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-black font-brand text-slate-800 leading-tight">
+            PG - TK - DAYCARE <span class="text-teal-600">ANAK SALEH</span>
+          </h1>
+          <p class="text-[11px] font-medium text-slate-500 hidden sm:block">Portal Raport & Perkembangan Anak Usia Dini</p>
+        </div>
+      </div>
+
+      <!-- User Active Session Badge & Logout -->
+      <div id="userNavbarSection" class="hidden flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <div id="navUserName" class="text-sm font-bold text-slate-800 leading-none">Pengguna</div>
+          <span id="navUserRoleBadge" class="text-[11px] font-semibold text-teal-700">Role</span>
+        </div>
+        <button onclick="handleLogout()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition flex items-center gap-1.5 shadow-sm">
+          <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       MAIN CONTENT CONTAINER
+       ========================================== -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==========================================
+         LOGIN SCREEN CONTAINER (DUAL PORTAL)
+         ========================================== -->
+    <div id="loginContainer" class="max-w-md mx-auto my-8 space-y-6">
+      <!-- School Hero Card -->
+      <div class="text-center space-y-2">
+        <div class="w-20 h-20 bg-gradient-to-tr from-teal-500 to-amber-400 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl border-4 border-white animate-float">
+          📖
+        </div>
+        <h2 class="text-2xl font-black font-brand text-slate-800">Sistem Raport Digital</h2>
+        <p class="text-xs text-slate-600">Silakan pilih jenis akun Anda untuk masuk ke sistem.</p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="glass-card rounded-3xl p-6 shadow-xl border border-white">
+        <!-- Role Tabs Switcher -->
+        <div class="flex p-1 bg-slate-100/90 rounded-2xl mb-6">
+          <button id="tabBtnOrtu" onclick="switchLoginRole('ORTU')" class="w-1/2 py-2.5 rounded-xl font-bold text-sm transition bg-teal-600 text-white shadow-md">
+            <i class="fas fa-user-friends mr-1"></i> Orang Tua
+          </button>
+          <button id="tabBtnStaff" onclick="switchLoginRole('STAFF')" class="w-1/2 py-2.5 rounded-xl font-bold text-sm transition text-slate-600 hover:text-slate-800">
+            <i class="fas fa-chalkboard-teacher mr-1"></i> Guru / Admin
+          </button>
+        </div>
+
+        <!-- FORM 1: LOGIN ORANG TUA -->
+        <form id="formLoginOrtu" onsubmit="handleLoginOrtu(event)" class="space-y-4">
+          <div class="bg-teal-50/70 p-3 rounded-2xl border border-teal-100 text-xs text-teal-800 flex items-start gap-2">
+            <i class="fas fa-info-circle text-teal-600 text-sm mt-0.5"></i>
+            <span>Gunakan <b>Nomor Induk Siswa (NIS)</b> dan <b>PIN</b> yang telah diberikan oleh pihak sekolah.</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Induk Siswa (NIS / NISN)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fas fa-id-card"></i>
+              </span>
+              <input type="text" id="loginOrtuNis" required placeholder="Contoh: 202601" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition font-medium">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">PIN Orang Tua</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fas fa-key"></i>
+              </span>
+              <input type="password" id="loginOrtuPin" required placeholder="4 Digit PIN (Default: 1234)" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition font-medium tracking-widest">
+            </div>
+          </div>
+
+          <button type="submit" id="btnSubmitLoginOrtu" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-teal-500/25 transition text-sm flex items-center justify-center">
+            Masuk ke Portal Orang Tua <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </form>
+
+        <!-- FORM 2: LOGIN GURU & ADMIN -->
+        <form id="formLoginStaff" onsubmit="handleLoginStaff(event)" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Masuk Sebagai</label>
+            <select id="loginStaffRole" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium">
+              <option value="WALI_KELAS">Wali Kelas / Guru</option>
+              <option value="ADMIN">Administrator Sekolah</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fas fa-user"></i>
+              </span>
+              <input type="text" id="loginStaffUsername" required placeholder="Contoh: guru.pg / admin" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition font-medium">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kata Sandi</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                <i class="fas fa-lock"></i>
+              </span>
+              <input type="password" id="loginStaffPassword" required placeholder="Masukkan kata sandi" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 focus:outline-none transition font-medium">
+            </div>
+          </div>
+
+          <button type="submit" id="btnSubmitLoginStaff" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-2xl shadow-lg transition text-sm flex items-center justify-center">
+            Masuk ke Dashboard Staff <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- Quick Demo Credentials Pill -->
+      <div class="bg-white/80 backdrop-blur rounded-2xl p-4 border border-slate-200/80 text-xs text-slate-600 space-y-1.5">
+        <p class="font-bold text-slate-800"><i class="fas fa-key text-amber-500 mr-1"></i> Akun Pengujian (Demo):</p>
+        <p>• <b>Orang Tua:</b> NIS: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">202601</code> | PIN: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">1234</code></p>
+        <p>• <b>Wali Kelas:</b> User: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">guru.pg</code> | Pass: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">guru123</code></p>
+        <p>• <b>Admin:</b> User: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">admin</code> | Pass: <code class="bg-slate-100 px-1 py-0.5 rounded font-bold">admin123</code></p>
+      </div>
+    </div>
+
+    <!-- DYNAMIC VIEWS -->
+    <?!= include('AdminView'); ?>
+    <?!= include('TeacherView'); ?>
+    <?!= include('ParentView'); ?>
+
+  </main>
+
+  <!-- ==========================================
+       MODALS
+       ========================================== -->
+
+  <!-- MODAL 1: TAMBAH / EDIT SISWA -->
+  <div id="modalStudent" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modalStudentTitle" class="font-extrabold text-lg text-slate-800">Form Data Siswa</h3>
+        <button onclick="document.getElementById('modalStudent').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveStudent(event)" class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">NIS *</label>
+            <input type="text" id="formStudentNis" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">NISN</label>
+            <input type="text" id="formStudentNisn" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Siswa *</label>
+          <input type="text" id="formStudentNama" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Panggilan</label>
+            <input type="text" id="formStudentPanggilan" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+            <select id="formStudentJK" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Jenjang *</label>
+            <select id="formStudentJenjang" onchange="handleStudentJenjangChange()" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+              <option value="Playgroup (PG)">Playgroup (PG)</option>
+              <option value="TK-A">TK-A</option>
+              <option value="TK-B">TK-B</option>
+              <option value="Daycare">Daycare</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kelas *</label>
+            <select id="formStudentKelas" required class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-semibold">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Lahir (YYYY-MM-DD)</label>
+          <input type="text" id="formStudentTglLahir" placeholder="2023-05-12" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Orang Tua / Wali</label>
+          <input type="text" id="formStudentOrtu" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">No. WhatsApp Ortu</label>
+            <input type="text" id="formStudentWa" placeholder="0812..." class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">PIN Ortu *</label>
+            <input type="text" id="formStudentPin" required class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Status Keaktifan</label>
+          <select id="formStudentStatus" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+            <option value="AKTIF">AKTIF</option>
+            <option value="LULUS">LULUS</option>
+            <option value="PINDAH">PINDAH</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modalStudent').classList.add('hidden')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+          <button type="submit" id="btnSaveStudent" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md">Simpan Data Siswa</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL BULK UPLOAD SISWA -->
+  <div id="modalBulkUploadStudent" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-extrabold text-lg text-slate-800">Upload / Import Data Siswa Massal</h3>
+          <p class="text-xs text-slate-500">Impor puluhan data murid sekaligus menggunakan file CSV atau salin-tempel dari Excel.</p>
+        </div>
+        <button onclick="document.getElementById('modalBulkUploadStudent').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Bulk Mode Tabs -->
+      <div class="flex p-1 bg-slate-100 rounded-xl">
+        <button id="bulkTabBtnFile" onclick="switchBulkTab('file')" class="w-1/2 py-2 rounded-lg text-xs font-bold bg-white text-slate-800 shadow-sm transition">
+          <i class="fas fa-file-csv mr-1 text-emerald-600"></i> Upload File CSV
+        </button>
+        <button id="bulkTabBtnPaste" onclick="switchBulkTab('paste')" class="w-1/2 py-2 rounded-lg text-xs font-bold text-slate-600 transition">
+          <i class="fas fa-paste mr-1 text-sky-600"></i> Copy-Paste dari Excel
+        </button>
+      </div>
+
+      <!-- Content 1: Upload File CSV -->
+      <div id="bulkContentFile" class="space-y-3">
+        <div class="border-2 border-dashed border-slate-300 hover:border-teal-500 bg-slate-50 hover:bg-teal-50/40 rounded-2xl p-6 text-center cursor-pointer transition" onclick="document.getElementById('csvFileInput').click()">
+          <input type="file" id="csvFileInput" accept=".csv,text/csv" onchange="handleCsvFileSelected(event)" class="hidden">
+          <div class="w-12 h-12 rounded-2xl bg-white shadow-sm text-emerald-600 flex items-center justify-center mx-auto text-xl mb-2">
+            <i class="fas fa-file-upload"></i>
+          </div>
+          <p id="csvFileLabel" class="text-xs font-bold text-slate-700">Pilih berkas CSV template</p>
+          <p class="text-[11px] text-slate-400 mt-1">Gunakan template resmi dari tombol "Unduh Template"</p>
+        </div>
+      </div>
+
+      <!-- Content 2: Copy Paste Textarea -->
+      <div id="bulkContentPaste" class="space-y-2 hidden">
+        <label class="block text-xs font-bold text-slate-700">Salin & Tempel Baris Tabel dari Excel / Google Sheets:</label>
+        <textarea id="bulkPasteTextarea" onkeyup="handleBulkPasteInput()" rows="5" class="w-full font-mono text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="Contoh format per baris:&#10;202601	0012345001	Muhammad Al-Fatih	Fatih	Playgroup (PG)	PG-A	Laki-laki	2023-05-12	Bapak Rahmat	081234567890	1234	AKTIF"></textarea>
+      </div>
+
+      <!-- Preview Table Container -->
+      <div id="bulkPreviewSection" class="space-y-2 hidden">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold text-slate-700">
+            Pratinjau Data: <span id="bulkParsedCount" class="text-teal-700">0 Siswa</span> Terdeteksi
+          </p>
+          <button onclick="clearBulkParsedData()" class="text-xs text-rose-600 hover:underline">Reset</button>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-48">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="sticky top-0 bg-slate-100 text-slate-700 uppercase font-semibold">
+              <tr>
+                <th class="p-2">NIS</th>
+                <th class="p-2">Nama Siswa</th>
+                <th class="p-2">Jenjang</th>
+                <th class="p-2">Kelas</th>
+                <th class="p-2">Orang Tua</th>
+                <th class="p-2">PIN</th>
+              </tr>
+            </thead>
+            <tbody id="bulkPreviewTableBody" class="divide-y divide-slate-200">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="downloadStudentTemplateCsv()" class="text-xs text-teal-700 hover:underline font-bold flex items-center gap-1">
+          <i class="fas fa-download"></i> Unduh File Template CSV
+        </button>
+        <div class="flex gap-2">
+          <button type="button" onclick="document.getElementById('modalBulkUploadStudent').classList.add('hidden')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl text-xs font-semibold">Batal</button>
+          <button type="button" id="btnSubmitBulkUpload" onclick="submitBulkStudentsImport()" disabled class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition text-xs flex items-center gap-1.5">
+            <i class="fas fa-cloud-upload-alt"></i> Proses & Simpan Semua
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: TAMBAH / EDIT WALI KELAS -->
+  <div id="modalTeacher" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modalTeacherTitle" class="font-extrabold text-lg text-slate-800">Form Akun Wali Kelas</h3>
+        <button onclick="document.getElementById('modalTeacher').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveTeacher(event)" class="space-y-3 text-sm">
+        <input type="hidden" id="formTeacherId">
+        
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
+          <input type="text" id="formTeacherNama" required placeholder="Contoh: Ustadzah Fatimah, S.Pd" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Username *</label>
+            <input type="text" id="formTeacherUsername" required class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+            <input type="password" id="formTeacherPassword" placeholder="Kosongkan jika tdk diubah" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Role</label>
+            <select id="formTeacherRole" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+              <option value="WALI_KELAS">WALI_KELAS</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kelas Diampu</label>
+            <select id="formTeacherKelas" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white font-semibold">
+              <option value="">-- Pilih Kelas Diampu --</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">No. HP / WA</label>
+          <input type="text" id="formTeacherHp" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Status</label>
+          <select id="formTeacherStatus" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+            <option value="AKTIF">AKTIF</option>
+            <option value="NONAKTIF">NONAKTIF</option>
+          </select>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modalTeacher').classList.add('hidden')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+          <button type="submit" id="btnSaveTeacher" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md">Simpan Akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: TAMBAH / EDIT KELAS -->
+  <div id="modalClass" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modalClassTitle" class="font-extrabold text-lg text-slate-800">Form Data Kelas</h3>
+        <button onclick="document.getElementById('modalClass').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleSaveClass(event)" class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Kode / ID Kelas *</label>
+          <input type="text" id="formClassId" required placeholder="Contoh: TK-A2, PG-B, DAYCARE-B" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl uppercase font-semibold">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Rombel / Kelas *</label>
+          <input type="text" id="formClassNama" required placeholder="Contoh: Kelas An-Nur (TK-A)" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Jenjang *</label>
+            <select id="formClassJenjang" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white">
+              <option value="Playgroup (PG)">Playgroup (PG)</option>
+              <option value="TK-A">TK-A</option>
+              <option value="TK-B">TK-B</option>
+              <option value="Daycare">Daycare</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kapasitas Murid</label>
+            <input type="number" id="formClassKapasitas" value="20" min="1" max="100" class="w-full px-3 py-2 border border-slate-300 rounded-xl">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Wali Kelas (Penugasan Guru)</label>
+          <select id="formClassWaliKelasSelect" onchange="handleClassTeacherSelectChange()" class="w-full px-3.5 py-2 border border-slate-300 rounded-xl bg-white">
+            <option value="">-- Pilih dari Daftar Guru --</option>
+          </select>
+          <input type="hidden" id="formClassIdWaliKelas">
+          <input type="hidden" id="formClassNamaWaliKelas">
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modalClass').classList.add('hidden')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+          <button type="submit" id="btnSaveClass" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-md">Simpan Kelas</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: KELOLA MURID DALAM KELAS -->
+  <div id="modalClassStudents" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="classStudentsModalTitle" class="font-extrabold text-lg text-slate-800">Daftar Murid Kelas ...</h3>
+          <p id="classStudentsModalSubtitle" class="text-xs text-teal-700 font-medium">Wali Kelas: ...</p>
+        </div>
+        <button onclick="document.getElementById('modalClassStudents').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Quick Add Student to Class Button & Bar -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-teal-50/70 p-3.5 rounded-2xl border border-teal-100">
+        <div class="text-xs text-teal-900">
+          <span class="font-bold" id="classStudentsCountText">0 Siswa</span> terdaftar di kelas ini
+        </div>
+        <button onclick="openAddStudentToCurrentClass()" class="w-full sm:w-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center justify-center gap-1.5">
+          <i class="fas fa-user-plus"></i> Tambah Murid ke Kelas Ini
+        </button>
+      </div>
+
+      <!-- Students Table in Class -->
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700 uppercase font-semibold">
+              <th class="p-2.5">NIS</th>
+              <th class="p-2.5">Nama Murid</th>
+              <th class="p-2.5">L/P</th>
+              <th class="p-2.5">Nama Orang Tua</th>
+              <th class="p-2.5">PIN Ortu</th>
+              <th class="p-2.5 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="classStudentsTableBody" class="divide-y divide-slate-200">
+            <tr>
+              <td colspan="6" class="p-4 text-center text-slate-400">Memuat siswa...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button type="button" onclick="document.getElementById('modalClassStudents').classList.add('hidden')" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: UPLOAD RAPORT SISWA (WALI KELAS) -->
+  <div id="modalUploadRaport" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="font-extrabold text-lg text-slate-800">Unggah Raport PDF</h3>
+          <p id="uploadModalChildName" class="text-xs font-bold text-teal-700">Nama Siswa</p>
+          <p id="uploadModalClass" class="text-[11px] text-slate-400">Kelas</p>
+        </div>
+        <button onclick="document.getElementById('modalUploadRaport').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitUploadRaportForm(event)" class="space-y-4 text-sm">
+        <!-- Drag and drop / file selector -->
+        <div class="border-2 border-dashed border-teal-300 bg-teal-50/50 hover:bg-teal-50 rounded-2xl p-6 text-center transition cursor-pointer" onclick="document.getElementById('uploadFileInput').click()">
+          <input type="file" id="uploadFileInput" accept=".pdf,application/pdf" onchange="handleFileSelected(event)" class="hidden">
+          <div class="w-12 h-12 bg-white rounded-2xl shadow-sm text-teal-600 flex items-center justify-center mx-auto text-xl mb-2">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <p id="uploadFileNotice" class="text-xs font-medium text-slate-700">
+            Klik untuk memilih file PDF Raport (Maks 10MB)
+          </p>
+          <p class="text-[11px] text-slate-400 mt-1">Format berkas harus .PDF</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Perkembangan Anak (Narasi Guru)</label>
+          <textarea id="uploadCatatanGuru" rows="3" class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-teal-500 focus:outline-none" placeholder="Tuliskan apresiasi dan capaian ananda..."></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="uploadStatusPublish" checked class="w-4 h-4 text-teal-600 rounded border-slate-300 focus:ring-teal-500">
+          <label for="uploadStatusPublish" class="text-xs font-medium text-slate-700">Terbitkan langsung agar dapat dilihat oleh Orang Tua</label>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="document.getElementById('modalUploadRaport').classList.add('hidden')" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+          <button type="submit" id="btnSubmitUpload" class="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-1.5">
+            <i class="fas fa-cloud-upload-alt mr-1"></i> Simpan & Unggah Raport
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: IN-APP PDF VIEWER -->
+  <div id="modalPdfViewer" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md hidden flex flex-col p-2 sm:p-6">
+    <div class="max-w-5xl w-full mx-auto bg-white rounded-3xl flex flex-col h-full overflow-hidden shadow-2xl">
+      <!-- Viewer Header -->
+      <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <i class="fas fa-file-pdf text-rose-500 text-lg"></i>
+          <h3 id="pdfModalTitle" class="font-bold text-slate-800 text-base">Pratinjau Raport Digital</h3>
+        </div>
+        <button onclick="closePdfModal()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1">
+          <i class="fas fa-times"></i> Tutup
+        </button>
+      </div>
+      <!-- Viewer Frame -->
+      <div class="flex-grow bg-slate-100 relative">
+        <iframe id="pdfModalIframe" src="" class="w-full h-full border-0" allow="fullscreen"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
+    <div class="bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 max-w-md">
+      <i id="toastIcon" class="fas fa-info-circle text-sky-400 text-lg"></i>
+      <span id="toastMessage" class="text-xs sm:text-sm font-medium">Pemberitahuan</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto border-t border-slate-200/80 py-4 text-center text-xs text-slate-500 bg-white/50 backdrop-blur-sm">
+    <p>© 2026 <b>PG - TK - DAYCARE ANAK SALEH</b>. Sistem Informasi Raport Digital.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <?!= include('Scripts'); ?>
+</body>
+</html>

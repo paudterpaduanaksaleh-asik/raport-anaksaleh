@@ -1,0 +1,7 @@
+# Node modules & temporary files
+node_modules/
+.DS_Store
+*.log
+
+# Clasp auth token (local credentials)
+.clasprc.json
