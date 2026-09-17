@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Raport - PG TK DAYCARE Anak Saleh</title>
+  <!-- STYLES -->
   <!-- Tailwind CSS & Google Fonts -->
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1281,7 +1282,7 @@
  */
 
 // URL Backend Google Apps Script Web App (API Endpoint)
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxsM6VG1pz_BIlxcREnIZOpHdWnZN-rZucX-p7gin-cT1Mkc9NkSK_GOlv1Wq4WyuSZrQ/exec";
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxl74TCkl2Yf46hZGN23dVoolT67voesznQiZLFa087rWIYD3mexeKkCGZy4qwQh6h5tg/exec";
 
 // Global State
 const state = {
@@ -1305,16 +1306,16 @@ const state = {
 };
 
 /**
- * Universal Promise Wrapper untuk memanggil fungsi backend GAS atau fallback REST API (GitHub Pages)
+ * Universal Promise Wrapper untuk memanggil backend GAS (Mendukung JSONP 100% Bebas CORS & Native GAS)
  */
-async function callGAS(funcName, ...args) {
-  // Jika berjalan di dalam Google Apps Script Web App
+function callGAS(funcName, ...args) {
+  // 1. Jika berjalan di dalam Google Apps Script Web App asli
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     return new Promise((resolve) => {
       google.script.run
         .withSuccessHandler(response => {
           if (!response) {
-            resolve({ success: false, message: "Respon server kosong. Pastikan initialSetup() sudah dijalankan." });
+            resolve({ success: false, message: "Respon server kosong." });
           } else {
             resolve(response);
           }
@@ -1326,31 +1327,56 @@ async function callGAS(funcName, ...args) {
     });
   }
 
-  // Jika berjalan di GitHub Pages / Standalone Web (Direct REST API Call)
-  try {
-    const payload = JSON.stringify({
-      action: funcName,
-      args: args
+  // 2. Jika pengunggahan file PDF besar, gunakan POST fetch
+  const payloadStr = JSON.stringify(args);
+  if (funcName === 'uploadStudentReport' && args[0] && args[0].fileBase64) {
+    return new Promise(async (resolve) => {
+      try {
+        const res = await fetch(GAS_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: funcName, args: args })
+        });
+        const data = await res.json();
+        resolve(data);
+      } catch (err) {
+        resolve({ success: false, message: "Gagal mengunggah berkas: " + err.message });
+      }
     });
+  }
 
-    const response = await fetch(GAS_API_URL, {
-      method: "POST",
-      body: payload
-    });
+  // 3. Untuk seluruh aksi API reguler (Login, Ambil Data, Update), gunakan JSONP (Bypass CORS)
+  return new Promise((resolve) => {
+    const callbackName = 'gas_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const script = document.createElement('script');
+    
+    const timeout = setTimeout(() => {
+      cleanup();
+      resolve({ success: false, message: "Waktu permintaan habis (timeout). Silakan coba lagi." });
+    }, 25000);
 
-    if (!response.ok) {
-      throw new Error("HTTP Error " + response.status);
+    function cleanup() {
+      clearTimeout(timeout);
+      try { delete window[callbackName]; } catch (e) { window[callbackName] = undefined; }
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
     }
 
-    const data = await response.json();
-    return data;
-  } catch (err) {
-    console.error("API Call Error:", err);
-    return {
-      success: false,
-      message: "Gagal terhubung ke server backend: " + (err.message || String(err))
+    window[callbackName] = function(response) {
+      cleanup();
+      resolve(response);
     };
-  }
+
+    script.onerror = function(err) {
+      cleanup();
+      resolve({ success: false, message: "Gagal memuat respon dari Google Apps Script." });
+    };
+
+    const encodedArgs = encodeURIComponent(payloadStr);
+    script.src = `${GAS_API_URL}?action=${encodeURIComponent(funcName)}&args=${encodedArgs}&callback=${callbackName}&_ts=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 // Inisialisasi saat Halaman Dimuat
