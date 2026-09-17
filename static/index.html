@@ -11,10 +11,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS with Dark Mode -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -46,6 +47,12 @@
     body {
       background: radial-gradient(circle at top right, #f0fdfa 0%, #f8fafc 40%, #f1f5f9 100%);
       min-height: 100vh;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .dark body {
+      background: radial-gradient(circle at top right, #0f172a 0%, #020617 50%, #080d1a 100%);
+      color: #f1f5f9;
     }
 
     .glass-card {
@@ -55,11 +62,26 @@
       border: 1px solid rgba(255, 255, 255, 0.7);
     }
 
+    .dark .glass-card {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
     .glass-header {
       background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .dark .glass-header {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
     @keyframes float {
@@ -69,9 +91,17 @@
     .animate-float {
       animation: float 4s ease-in-out infinite;
     }
+
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.08); }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 6s ease-in-out infinite;
+    }
   </style>
 </head>
-<body x-data="raportApp()" x-init="initApp()" class="text-slate-800 antialiased flex flex-col min-h-screen">
+<body x-data="raportApp()" x-init="initApp()" class="text-slate-800 dark:text-slate-100 antialiased flex flex-col min-h-screen">
 
   <!-- ==========================================
        TOP NAVBAR
@@ -79,10 +109,10 @@
   <header class="glass-header sticky top-0 z-40 transition-all shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Logo & Nama Sekolah -->
-      <div class="flex items-center gap-3">
-        <!-- Logo Image or Emoji -->
+      <div class="flex items-center gap-3 cursor-pointer" @click="!currentUser ? null : loadRoleData()">
+        <!-- Logo Image or Emoji (Header) -->
         <template x-if="schoolSettings.logoType === 'image' && schoolSettings.logoImg">
-          <img :src="schoolSettings.logoImg" alt="Logo Sekolah" class="w-10 h-10 rounded-2xl object-cover shadow-md border border-white">
+          <img :src="schoolSettings.logoImg" alt="Logo Sekolah" class="w-10 h-10 rounded-2xl object-cover shadow-md border border-white dark:border-slate-700">
         </template>
         <template x-if="schoolSettings.logoType !== 'image' || !schoolSettings.logoImg">
           <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white text-xl font-bold shadow-md"
@@ -90,22 +120,33 @@
           </div>
         </template>
         <div>
-          <h1 class="text-base sm:text-lg font-black font-brand text-slate-800 leading-tight" x-text="schoolSettings.name">
-            PG - TK - DAYCARE <span class="text-teal-600">ANAK SALEH</span>
+          <h1 class="text-base sm:text-lg font-black font-brand text-slate-800 dark:text-white leading-tight" x-text="schoolSettings.name">
+            PG - TK - DAYCARE <span class="text-teal-600 dark:text-teal-400">ANAK SALEH</span>
           </h1>
-          <p class="text-[11px] font-medium text-slate-500 hidden sm:block" x-text="schoolSettings.tagline">Portal Raport & Perkembangan Anak Usia Dini</p>
+          <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 hidden sm:block" x-text="schoolSettings.tagline">Portal Raport & Perkembangan Anak Usia Dini</p>
         </div>
       </div>
 
-      <!-- User Active Session Badge & Logout -->
-      <div x-show="currentUser" x-cloak class="flex items-center gap-3">
-        <div class="text-right hidden sm:block">
-          <div class="text-sm font-bold text-slate-800 leading-none" x-text="currentUser?.namaLengkap || currentUser?.namaMurid || currentUser?.username">Pengguna</div>
-          <span class="text-[11px] font-semibold text-teal-700 uppercase" x-text="getRoleDisplayName(currentUser?.role)">Role</span>
-        </div>
-        <button @click="logout()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition flex items-center gap-1.5 shadow-sm">
-          <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Keluar</span>
+      <!-- Right Action Items: Dark Mode Toggle & Session Badge -->
+      <div class="flex items-center gap-2.5">
+        <!-- Theme Dark/Light Mode Button -->
+        <button @click="toggleDarkMode()" 
+                :title="darkMode ? 'Beralih ke Mode Terang (Light)' : 'Beralih ke Mode Gelap (Dark)'"
+                class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm transition shadow-sm border"
+                :class="darkMode ? 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'">
+          <i :class="darkMode ? 'fas fa-sun text-base text-amber-400' : 'fas fa-moon text-base text-slate-600'"></i>
         </button>
+
+        <!-- User Active Session Badge & Logout -->
+        <div x-show="currentUser" x-cloak class="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-800">
+          <div class="text-right hidden sm:block">
+            <div class="text-sm font-bold text-slate-800 dark:text-white leading-none" x-text="currentUser?.namaLengkap || currentUser?.namaMurid || currentUser?.username">Pengguna</div>
+            <span class="text-[11px] font-semibold text-teal-700 dark:text-teal-400 uppercase" x-text="getRoleDisplayName(currentUser?.role)">Role</span>
+          </div>
+          <button @click="logout()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 transition flex items-center gap-1.5 shadow-sm">
+            <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Keluar</span>
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -115,87 +156,208 @@
        ========================================== -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <!-- 1. LOGIN SCREEN -->
-    <div x-show="!currentUser" x-cloak class="max-w-md mx-auto my-6 space-y-6">
-      <div class="text-center space-y-2">
-        <div class="w-20 h-20 bg-gradient-to-tr from-teal-500 to-amber-400 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl border-4 border-white animate-float"
-             x-text="schoolSettings.logoEmoji || '📖'">
+    <!-- 1. MODERN LANDING PAGE & LOGIN VIEW -->
+    <div x-show="!currentUser" x-cloak class="py-4 lg:py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        
+        <!-- LEFT COLUMN: LANDING PAGE HERO & SCHOOL HIGHLIGHTS -->
+        <div class="lg:col-span-7 space-y-6 sm:space-y-7">
+          <!-- Tagline Badge -->
+          <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold bg-teal-500/10 border border-teal-500/30 text-teal-700 dark:text-teal-300 backdrop-blur-md shadow-sm">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+            <span class="tracking-wide">Sistem Informasi Raport Digital Resmi PAUD Terpadu</span>
+          </div>
+
+          <!-- Main Hero Title -->
+          <div class="space-y-3">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black font-brand text-slate-900 dark:text-white leading-[1.15] tracking-tight">
+              Tumbuh Kembang Ananda Terpantau <span class="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-400 bg-clip-text text-transparent">Penuh Kasih & Nyata</span>
+            </h1>
+            <p class="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl font-normal">
+              Selamat datang di portal raport digital <strong class="text-slate-800 dark:text-white" x-text="schoolSettings.name">PG - TK - DAYCARE ANAK SALEH</strong>. Wadah terintegrasi untuk orang tua, guru, dan kepala sekolah dalam memantau capaian motorik, kognitif, budi pekerti, serta tahfiz anak usia dini secara transparan.
+            </p>
+          </div>
+
+          <!-- 5 Educational Stages Badge Strip -->
+          <div class="space-y-2">
+            <div class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Jenjang Pendidikan Tersedia:</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span>🧸</span> PG A (Playgroup)
+              </span>
+              <span class="px-3 py-1.5 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span>🎨</span> PG B (Playgroup)
+              </span>
+              <span class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span>🌱</span> TK A (Taman Kanak-Kanak)
+              </span>
+              <span class="px-3 py-1.5 bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/60 text-teal-800 dark:text-teal-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span>🎓</span> TK B (Taman Kanak-Kanak)
+              </span>
+              <span class="px-3 py-1.5 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-purple-800 dark:text-purple-300 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <span>🍼</span> Daycare
+              </span>
+            </div>
+          </div>
+
+          <!-- Feature Highlight Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+            <div class="glass-card rounded-2xl p-4 space-y-1.5 border border-white/60 dark:border-slate-800/80 shadow-sm">
+              <div class="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 flex items-center justify-center text-sm font-bold">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <h4 class="font-bold text-xs text-slate-800 dark:text-white">Raport PDF Siap Cetak</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Berkas raport resmi yang telah diverifikasi & di-ACC Kepala Sekolah.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-1.5 border border-white/60 dark:border-slate-800/80 shadow-sm">
+              <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center text-sm font-bold">
+                <i class="fas fa-key"></i>
+              </div>
+              <h4 class="font-bold text-xs text-slate-800 dark:text-white">Akses Ortu Instan</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Wali murid cukup memasukkan NIS & PIN ananda tanpa login yang rumit.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-4 space-y-1.5 border border-white/60 dark:border-slate-800/80 shadow-sm">
+              <div class="w-8 h-8 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 flex items-center justify-center text-sm font-bold">
+                <i class="fas fa-check-double"></i>
+              </div>
+              <h4 class="font-bold text-xs text-slate-800 dark:text-white">Review & Revisi Akurat</h4>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">Catatan evaluasi guru ditinjau langsung oleh Kepala Sekolah secara berkala.</p>
+            </div>
+          </div>
+
+          <!-- School Address & Info Footer Strip -->
+          <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/80 dark:border-slate-800">
+            <span class="flex items-center gap-1.5">
+              <i class="fas fa-map-marker-alt text-teal-600 dark:text-teal-400"></i>
+              <span x-text="schoolSettings.alamat"></span>
+            </span>
+            <span class="flex items-center gap-1.5">
+              <i class="fas fa-phone-alt text-teal-600 dark:text-teal-400"></i>
+              <span x-text="schoolSettings.telepon"></span>
+            </span>
+          </div>
         </div>
-        <h2 class="text-2xl font-black font-brand text-slate-800" x-text="schoolSettings.name">Sistem Raport Digital</h2>
-        <p class="text-xs text-slate-600" x-text="schoolSettings.tagline">Silakan pilih peran Anda untuk masuk ke sistem.</p>
-      </div>
 
-      <div class="glass-card rounded-3xl p-6 shadow-xl border border-white/80 space-y-5">
-        <!-- 4 Role Selector Tabs -->
-        <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100/90 rounded-2xl border border-slate-200 text-center text-xs font-bold">
-          <button @click="loginRole = 'ORTU'" :class="loginRole === 'ORTU' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/60'" class="py-2.5 rounded-xl transition">
-            <i class="fas fa-heart text-amber-300 mr-1"></i> Ortu
-          </button>
-          <button @click="loginRole = 'WALI_KELAS'" :class="loginRole === 'WALI_KELAS' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/60'" class="py-2.5 rounded-xl transition">
-            <i class="fas fa-chalkboard-teacher mr-1"></i> Guru
-          </button>
-          <button @click="loginRole = 'KEPSEK'" :class="loginRole === 'KEPSEK' ? 'bg-purple-700 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/60'" class="py-2.5 rounded-xl transition">
-            <i class="fas fa-user-tie mr-1"></i> Kepsek
-          </button>
-          <button @click="loginRole = 'ADMIN'" :class="loginRole === 'ADMIN' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-600 hover:bg-slate-200/60'" class="py-2.5 rounded-xl transition">
-            <i class="fas fa-shield-alt mr-1"></i> Admin
-          </button>
+        <!-- RIGHT COLUMN: MODERN GLASSMORPHIC LOGIN CARD -->
+        <div class="lg:col-span-5 relative">
+          <!-- Ambient Glow Effect -->
+          <div class="absolute -inset-2 bg-gradient-to-tr from-teal-500/20 via-emerald-500/20 to-amber-500/20 rounded-3xl blur-2xl animate-pulse-soft -z-10"></div>
+
+          <div class="glass-card rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/80 dark:border-slate-800 space-y-6">
+            
+            <!-- Dynamic School Logo Icon (Synced with Header & Settings) -->
+            <div class="text-center space-y-2">
+              <template x-if="schoolSettings.logoType === 'image' && schoolSettings.logoImg">
+                <img :src="schoolSettings.logoImg" alt="Logo Sekolah" class="w-20 h-20 rounded-3xl mx-auto object-cover shadow-xl border-4 border-white dark:border-slate-700 animate-float">
+              </template>
+              <template x-if="schoolSettings.logoType !== 'image' || !schoolSettings.logoImg">
+                <div class="w-20 h-20 bg-gradient-to-tr from-teal-600 via-emerald-500 to-teal-400 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl border-4 border-white dark:border-slate-700 animate-float text-white"
+                     x-text="schoolSettings.logoEmoji || '🌱'">
+                </div>
+              </template>
+              <h2 class="text-xl sm:text-2xl font-black font-brand text-slate-800 dark:text-white tracking-tight" x-text="schoolSettings.name">PG - TK - DAYCARE ANAK SALEH</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400" x-text="schoolSettings.tagline">Pilih peran Anda untuk masuk ke sistem.</p>
+            </div>
+
+            <!-- 4 Role Selector Tabs -->
+            <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100/90 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 text-center text-xs font-bold shadow-inner">
+              <button @click="loginRole = 'ORTU'" :class="loginRole === 'ORTU' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'" class="py-2.5 rounded-xl transition">
+                <i class="fas fa-heart text-amber-300 mr-1"></i> Ortu
+              </button>
+              <button @click="loginRole = 'WALI_KELAS'" :class="loginRole === 'WALI_KELAS' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'" class="py-2.5 rounded-xl transition">
+                <i class="fas fa-chalkboard-teacher mr-1"></i> Guru
+              </button>
+              <button @click="loginRole = 'KEPSEK'" :class="loginRole === 'KEPSEK' ? 'bg-purple-700 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'" class="py-2.5 rounded-xl transition">
+                <i class="fas fa-user-tie mr-1"></i> Kepsek
+              </button>
+              <button @click="loginRole = 'ADMIN'" :class="loginRole === 'ADMIN' ? 'bg-slate-800 dark:bg-slate-700 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'" class="py-2.5 rounded-xl transition">
+                <i class="fas fa-shield-alt mr-1"></i> Admin
+              </button>
+            </div>
+
+            <!-- FORM LOGIN ORANG TUA -->
+            <form x-show="loginRole === 'ORTU'" @submit.prevent="handleLogin()" class="space-y-4">
+              <div class="text-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-800 dark:text-white text-sm">Login Wali Murid</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Gunakan NIS dan PIN Akses ananda untuk melihat raport.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nomor Induk Siswa (NIS):</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-id-card"></i></span>
+                  <input type="text" x-model="loginForm.identifier" required placeholder="Contoh: 202601" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 dark:bg-slate-800/80 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">PIN Akses Raport:</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-key"></i></span>
+                  <input type="password" x-model="loginForm.secret" required placeholder="Contoh: 1234" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 dark:bg-slate-800/80 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Default PIN demo: <span class="font-bold text-teal-600 dark:text-teal-400">1234</span></p>
+              </div>
+              <button type="submit" :disabled="loading" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-teal-600/30 transition flex items-center justify-center gap-2">
+                <span x-show="!loading">Masuk ke Portal Wali Murid</span>
+                <span x-show="loading"><i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa...</span>
+                <i x-show="!loading" class="fas fa-arrow-right"></i>
+              </button>
+            </form>
+
+            <!-- FORM LOGIN STAFF (GURU, KEPSEK, ADMIN) -->
+            <form x-show="loginRole !== 'ORTU'" @submit.prevent="handleLogin()" class="space-y-4">
+              <div class="text-center pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="font-bold text-slate-800 dark:text-white text-sm" x-text="'Login ' + getRoleDisplayName(loginRole)">Login Staff</h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Masukkan username dan password akun terdaftar.</p>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Username Login:</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-user"></i></span>
+                  <input type="text" x-model="loginForm.identifier" required placeholder="Contoh: guru.tka / kepsek / admin" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 dark:bg-slate-800/80 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Kata Sandi (Password):</label>
+                <div class="relative">
+                  <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
+                  <input type="password" x-model="loginForm.secret" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 dark:bg-slate-800/80 text-slate-800 dark:text-white rounded-2xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+              </div>
+              <button type="submit" :disabled="loading" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-sm rounded-2xl shadow-lg shadow-teal-600/30 transition flex items-center justify-center gap-2">
+                <span x-show="!loading">Masuk ke Sistem</span>
+                <span x-show="loading"><i class="fas fa-spinner fa-spin mr-1"></i> Memproses...</span>
+                <i x-show="!loading" class="fas fa-arrow-right"></i>
+              </button>
+            </form>
+
+            <!-- Quick Clickable Demo Login Fillers -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div class="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 text-center tracking-wider">Akses Uji Coba Cepat (1-Klik):</div>
+              <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+                <button type="button" @click="quickFillDemo('ORTU', '202601', '1234')" class="p-2 rounded-xl bg-teal-50/80 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-left border border-teal-200/60 dark:border-teal-800/60 transition">
+                  <div class="font-bold">👶 Demo Wali Murid</div>
+                  <div class="text-[10px] text-teal-600 dark:text-teal-400">NIS: 202601 • PIN: 1234</div>
+                </button>
+                <button type="button" @click="quickFillDemo('WALI_KELAS', 'guru.tka', 'guru123')" class="p-2 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-left border border-amber-200/60 dark:border-amber-800/60 transition">
+                  <div class="font-bold">👩‍🏫 Demo Wali Kelas</div>
+                  <div class="text-[10px] text-amber-600 dark:text-amber-400">guru.tka • guru123</div>
+                </button>
+                <button type="button" @click="quickFillDemo('KEPSEK', 'kepsek', 'kepsek123')" class="p-2 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-300 text-left border border-purple-200/60 dark:border-purple-800/60 transition">
+                  <div class="font-bold">👔 Demo Kepala Sekolah</div>
+                  <div class="text-[10px] text-purple-600 dark:text-purple-400">kepsek • kepsek123</div>
+                </button>
+                <button type="button" @click="quickFillDemo('ADMIN', 'admin', 'admin123')" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-left border border-slate-200 dark:border-slate-700 transition">
+                  <div class="font-bold">🛡️ Demo Administrator</div>
+                  <div class="text-[10px] text-slate-500 dark:text-slate-400">admin • admin123</div>
+                </button>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <!-- FORM LOGIN ORANG TUA -->
-        <form x-show="loginRole === 'ORTU'" @submit.prevent="handleLogin()" class="space-y-4">
-          <div class="text-center pb-2 border-b border-slate-100">
-            <h3 class="font-bold text-slate-800 text-sm">Login Wali Murid</h3>
-            <p class="text-[11px] text-slate-500">Gunakan NIS dan PIN Akses ananda untuk melihat raport.</p>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Nomor Induk Siswa (NIS):</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-id-card"></i></span>
-              <input type="text" x-model="loginForm.identifier" required placeholder="Contoh: 202601" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">PIN Akses Raport:</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-key"></i></span>
-              <input type="password" x-model="loginForm.secret" required placeholder="Contoh: 1234" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-            <p class="text-[10px] text-slate-400 mt-1">Default PIN demo: <span class="font-bold text-teal-600">1234</span></p>
-          </div>
-          <button type="submit" :disabled="loading" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-sm rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
-            <span x-show="!loading">Masuk ke Portal Wali Murid</span>
-            <span x-show="loading"><i class="fas fa-spinner fa-spin mr-1"></i> Memeriksa...</span>
-            <i x-show="!loading" class="fas fa-arrow-right"></i>
-          </button>
-        </form>
-
-        <!-- FORM LOGIN STAFF (GURU, KEPSEK, ADMIN) -->
-        <form x-show="loginRole !== 'ORTU'" @submit.prevent="handleLogin()" class="space-y-4">
-          <div class="text-center pb-2 border-b border-slate-100">
-            <h3 class="font-bold text-slate-800 text-sm" x-text="'Login ' + getRoleDisplayName(loginRole)">Login Staff</h3>
-            <p class="text-[11px] text-slate-500">Masukkan username dan password akun terdaftar.</p>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Username:</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-user"></i></span>
-              <input type="text" x-model="loginForm.identifier" required placeholder="Username Anda" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kata Sandi (Password):</label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-lock"></i></span>
-              <input type="password" x-model="loginForm.secret" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
-            </div>
-          </div>
-          <button type="submit" :disabled="loading" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-sm rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
-            <span x-show="!loading">Masuk ke Sistem</span>
-            <span x-show="loading"><i class="fas fa-spinner fa-spin mr-1"></i> Memproses...</span>
-            <i x-show="!loading" class="fas fa-arrow-right"></i>
-          </button>
-        </form>
       </div>
     </div>
 
@@ -1385,6 +1547,7 @@
     function raportApp() {
       return {
         // State
+        darkMode: false,
         currentUser: null,
         loginRole: 'ORTU',
         loginForm: { identifier: '', secret: '' },
@@ -1847,6 +2010,15 @@
         },
 
         initApp() {
+          const savedTheme = localStorage.getItem('ANAK_SALEH_THEME');
+          if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            this.darkMode = true;
+            document.documentElement.classList.add('dark');
+          } else {
+            this.darkMode = false;
+            document.documentElement.classList.remove('dark');
+          }
+
           this.initLocalDb();
           const saved = localStorage.getItem('ANAK_SALEH_SESSION');
           if (saved) {
@@ -1857,6 +2029,24 @@
               this.logout();
             }
           }
+        },
+
+        toggleDarkMode() {
+          this.darkMode = !this.darkMode;
+          if (this.darkMode) {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('ANAK_SALEH_THEME', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('ANAK_SALEH_THEME', 'light');
+          }
+        },
+
+        quickFillDemo(role, identifier, secret) {
+          this.loginRole = role;
+          this.loginForm.identifier = identifier;
+          this.loginForm.secret = secret;
+          this.showToast(`Akun demo ${role} (${identifier}) telah terisi!`, 'info');
         },
 
         showToast(msg, type = 'info') {
