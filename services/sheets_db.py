@@ -336,6 +336,26 @@ class DatabaseManager:
         self._save_local()
         return True
 
+    def reset_teacher_password(self, user_id: str, new_password: str, operator_name: str) -> bool:
+        user_id = str(user_id).strip()
+        u = next((x for x in self.db["users"] if x.get("userId") == user_id), None)
+        if u:
+            u["password"] = str(new_password).strip()
+            self.log_activity(operator_name, "ADMIN", "Reset Password Guru", f"Mereset password untuk akun: {u.get('namaLengkap')} ({u.get('username')})")
+            self._save_local()
+            return True
+        return False
+
+    def delete_teacher(self, user_id: str, operator_name: str) -> bool:
+        user_id = str(user_id).strip()
+        idx = next((i for i, u in enumerate(self.db["users"]) if u.get("userId") == user_id), None)
+        if idx is not None:
+            deleted = self.db["users"].pop(idx)
+            self.log_activity(operator_name, "ADMIN", "Hapus Akun Guru", f"Menghapus akun: {deleted.get('namaLengkap')} ({deleted.get('username')})")
+            self._save_local()
+            return True
+        return False
+
     # ================= KELOMPOK CRUD =================
     def save_class(self, class_data: Dict[str, Any], operator_name: str) -> bool:
         k_id = str(class_data.get("idKelompok", "")).strip()

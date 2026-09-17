@@ -600,6 +600,67 @@ function saveTeacherAdmin(userObj, adminUser) {
 }
 
 /**
+ * Reset Password Akun Guru / Staff oleh Administrator
+ */
+function resetTeacherPasswordAdmin(userId, newPassword, adminUser) {
+  try {
+    if (!userId || !newPassword) {
+      return apiResponse(false, null, "User ID dan Password Baru wajib diisi.");
+    }
+
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var usersSheet = ss.getSheetByName("DB_Users");
+    var data = usersSheet.getDataRange().getValues();
+    var targetUser = null;
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(userId).trim()) {
+        usersSheet.getRange(i + 1, 3).setValue(String(newPassword).trim());
+        targetUser = String(data[i][3] || data[i][1]);
+        break;
+      }
+    }
+
+    if (targetUser) {
+      logActivity(adminUser || "ADMIN", "ADMIN", "RESET PASSWORD", "Mereset password akun: " + targetUser);
+      return apiResponse(true, null, "Password akun " + targetUser + " berhasil direset.");
+    }
+
+    return apiResponse(false, null, "Akun pengguna tidak ditemukan.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal mereset password: " + err.message);
+  }
+}
+
+/**
+ * Hapus Akun Guru / Staff oleh Administrator
+ */
+function deleteTeacherAdmin(userId, adminUser) {
+  try {
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var usersSheet = ss.getSheetByName("DB_Users");
+    var data = usersSheet.getDataRange().getValues();
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(userId).trim()) {
+        var nama = String(data[i][3] || data[i][1]);
+        usersSheet.deleteRow(i + 1);
+        logActivity(adminUser || "ADMIN", "ADMIN", "HAPUS USER", "Menghapus akun: " + nama);
+        return apiResponse(true, null, "Akun " + nama + " berhasil dihapus.");
+      }
+    }
+
+    return apiResponse(false, null, "Akun tidak ditemukan.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal menghapus akun: " + err.message);
+  }
+}
+
+/**
  * Mengambil daftar Data Kelompok Belajar (Rombel)
  */
 function getClassesListAdmin() {

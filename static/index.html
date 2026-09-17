@@ -742,67 +742,131 @@
               <i class="fas fa-chalkboard-teacher text-amber-300"></i> Portal Guru & Wali Kelas
             </div>
             <h2 class="text-2xl font-black font-brand" x-text="teacherData.infoKelompok?.namaKelompok || 'Kelas Bimbingan'"></h2>
-            <p class="text-teal-100 text-xs mt-1">Unggah berkas PDF dan isi narasi capaian perkembangan anak.</p>
+            <p class="text-teal-100 text-xs mt-1">Kelola raport digital, pantau persetujuan Kepala Sekolah, dan tindak lanjuti catatan evaluasi.</p>
           </div>
-          <button @click="loadTeacherData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start">
-            <i class="fas fa-sync-alt" :class="loading && 'fa-spin'"></i> Refresh
+          <button @click="loadTeacherData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start shadow-sm">
+            <i class="fas fa-sync-alt" :class="loading && 'fa-spin'"></i> Refresh Data
           </button>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/20">
           <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
-            <p class="text-xs text-teal-200">Total Murid di Kelas</p>
-            <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.totalSiswa || 0">0</p>
+            <p class="text-xs text-teal-200">Total Murid di Rombel</p>
+            <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.totalSiswa || teacherData.muridList?.length || 0">0</p>
           </div>
           <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
             <p class="text-xs text-teal-200">Raport Diunggah</p>
             <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.raportDiunggah || 0">0</p>
           </div>
+          <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
+            <p class="text-xs text-emerald-200">ACC & Disetujui</p>
+            <p class="text-2xl font-bold mt-1 text-emerald-300" x-text="teacherData.muridList?.filter(m => m.statusRaport === 'DISETUJUI').length || 0">0</p>
+          </div>
+          <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10" :class="teacherData.muridList?.some(m => m.statusRaport === 'REVISI') ? 'bg-rose-500/40 border-rose-300 ring-2 ring-rose-300' : ''">
+            <p class="text-xs" :class="teacherData.muridList?.some(m => m.statusRaport === 'REVISI') ? 'text-rose-200 font-bold' : 'text-teal-200'">Perlu Revisi Kepsek</p>
+            <p class="text-2xl font-bold mt-1" :class="teacherData.muridList?.some(m => m.statusRaport === 'REVISI') ? 'text-rose-200' : ''" x-text="teacherData.muridList?.filter(m => m.statusRaport === 'REVISI').length || 0">0</p>
+          </div>
         </div>
       </div>
 
+      <!-- Alert Banner jika ada catatan revisi dari kepala sekolah -->
+      <template x-if="teacherData.muridList?.some(m => m.statusRaport === 'REVISI')">
+        <div class="p-4 sm:p-5 bg-gradient-to-r from-rose-50 to-amber-50 border-2 border-rose-300 rounded-3xl text-rose-900 flex items-start gap-4 shadow-md animate-pulse">
+          <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 font-bold text-xl shadow-md">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="space-y-1">
+            <h4 class="font-extrabold text-sm sm:text-base text-rose-900">Perhatian: Ada Raport yang Memerlukan Revisi dari Kepala Sekolah!</h4>
+            <p class="text-xs text-rose-800 leading-relaxed">
+              Kepala Sekolah telah memberikan instruksi revisi. Silakan cek baris murid berstatus <span class="px-2 py-0.5 bg-rose-200 text-rose-900 font-bold rounded-md">REVISI</span> di bawah, baca catatannya, lalu klik <strong>"Perbaiki Raport"</strong> untuk memperbarui berkas/narasi.
+            </p>
+          </div>
+        </div>
+      </template>
+
       <!-- Daftar Siswa di Kelas -->
       <div class="glass-card rounded-2xl p-5 space-y-4">
-        <h3 class="font-bold text-base text-slate-800">Daftar Murid di Rombel Anda</h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <div>
+            <h3 class="font-bold text-base text-slate-800">Daftar Murid di Rombel Anda</h3>
+            <p class="text-xs text-slate-500">Pantau progres pengisian raport digital & status approval Kepala Sekolah.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 font-semibold">Tahun Pelajaran:</span>
+            <span class="px-2.5 py-1 bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold rounded-lg" x-text="(teacherData.activeTA?.tahun || '2025/2026') + ' - ' + (teacherData.activeTA?.semester || 'Ganjil')"></span>
+          </div>
+        </div>
+
         <div class="overflow-x-auto rounded-xl border border-slate-200">
           <table class="w-full text-left border-collapse text-sm">
             <thead>
               <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
-                <th class="p-3.5">NIS</th>
-                <th class="p-3.5">Nama Murid</th>
+                <th class="p-3.5">NIS & Murid</th>
+                <th class="p-3.5">Jenjang</th>
                 <th class="p-3.5">Status Raport</th>
-                <th class="p-3.5">Catatan Perkembangan</th>
+                <th class="p-3.5 min-w-[300px]">Catatan Capaian & Revisi Kepala Sekolah</th>
                 <th class="p-3.5 text-center">Aksi Unggah / Edit</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200 text-xs">
               <template x-for="m in teacherData.muridList" :key="m.nis">
-                <tr class="hover:bg-slate-50 transition">
-                  <td class="p-3.5 font-mono font-bold text-slate-800" x-text="m.nis"></td>
-                  <td class="p-3.5 font-bold text-slate-800 text-sm" x-text="m.namaLengkap"></td>
+                <tr class="hover:bg-slate-50 transition" :class="m.statusRaport === 'REVISI' ? 'bg-rose-50/50' : ''">
                   <td class="p-3.5">
-                    <span class="px-2.5 py-1 rounded-full font-bold"
+                    <div class="font-bold text-slate-800 text-sm" x-text="m.namaLengkap"></div>
+                    <div class="font-mono text-slate-500 text-[11px]" x-text="'NIS: ' + m.nis"></div>
+                  </td>
+                  <td class="p-3.5">
+                    <span class="px-2.5 py-1 bg-slate-100 rounded-lg font-bold text-slate-700 text-[11px]" x-text="m.jenjang || '-'"></span>
+                  </td>
+                  <td class="p-3.5">
+                    <span class="px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1.5"
                           :class="{
                             'bg-slate-100 text-slate-600': m.statusRaport === 'BELUM_UPLOAD',
                             'bg-amber-100 text-amber-800': m.statusRaport === 'DIAJUKAN',
-                            'bg-rose-100 text-rose-800': m.statusRaport === 'REVISI',
+                            'bg-rose-100 text-rose-800 border border-rose-300 ring-2 ring-rose-200': m.statusRaport === 'REVISI',
                             'bg-emerald-100 text-emerald-800': m.statusRaport === 'DISETUJUI'
-                          }"
-                          x-text="m.statusRaport"></span>
+                          }">
+                      <template x-if="m.statusRaport === 'REVISI'"><i class="fas fa-exclamation-triangle text-rose-600"></i></template>
+                      <template x-if="m.statusRaport === 'DISETUJUI'"><i class="fas fa-check-circle text-emerald-600"></i></template>
+                      <template x-if="m.statusRaport === 'DIAJUKAN'"><i class="fas fa-clock text-amber-600"></i></template>
+                      <span x-text="m.statusRaport === 'REVISI' ? 'PERLU REVISI' : (m.statusRaport === 'DISETUJUI' ? 'DISETUJUI / ACC' : (m.statusRaport === 'DIAJUKAN' ? 'MENUNGGU ACC' : 'BELUM UPLOAD'))"></span>
+                    </span>
                   </td>
-                  <td class="p-3.5 max-w-xs truncate text-slate-600" x-text="m.raportData?.catatanPerkembangan || '-'"></td>
+                  <td class="p-3.5 space-y-2">
+                    <!-- Catatan Evaluasi Guru -->
+                    <div>
+                      <span class="text-[10px] font-bold text-slate-400 uppercase block mb-0.5">Catatan Guru:</span>
+                      <p class="text-slate-700 font-medium" x-text="m.raportData?.catatanPerkembangan || 'Belum ada catatan evaluasi.'"></p>
+                    </div>
+
+                    <!-- Highlight Catatan Revisi dari Kepala Sekolah -->
+                    <template x-if="m.statusRaport === 'REVISI' && m.raportData?.catatanRevisi">
+                      <div class="p-3 bg-rose-50 border-2 border-rose-300 rounded-2xl text-rose-900 shadow-sm space-y-1">
+                        <div class="font-extrabold text-[11px] text-rose-700 flex items-center gap-1.5">
+                          <i class="fas fa-reply text-rose-600"></i> CATATAN REVISI DARI KEPALA SEKOLAH:
+                        </div>
+                        <div class="text-xs font-semibold bg-white p-2.5 rounded-xl border border-rose-200 text-slate-800 leading-relaxed" x-text="m.raportData.catatanRevisi"></div>
+                      </div>
+                    </template>
+                  </td>
                   <td class="p-3.5 text-center">
                     <div class="flex items-center justify-center gap-1.5">
-                      <button @click="openUploadModal(m)" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold flex items-center gap-1 shadow-sm">
-                        <i class="fas fa-cloud-upload-alt"></i> Upload Raport
+                      <button @click="openUploadModal(m)" 
+                              :class="m.statusRaport === 'REVISI' ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-200' : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-200'"
+                              class="px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 shadow-md transition">
+                        <i :class="m.statusRaport === 'REVISI' ? 'fas fa-wrench' : 'fas fa-cloud-upload-alt'"></i>
+                        <span x-text="m.statusRaport === 'REVISI' ? 'Perbaiki Raport' : (m.raportData ? 'Edit Raport' : 'Upload Raport')"></span>
                       </button>
-                      <button x-show="m.raportData?.urlPdf" @click="openPdfViewer(m.raportData.urlPdf, 'Raport - ' + m.namaLengkap)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-1">
+                      <button x-show="m.raportData?.urlPdf" @click="openPdfViewer(m.raportData.urlPdf, 'Raport - ' + m.namaLengkap)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-1 border border-slate-200 shadow-sm">
                         <i class="fas fa-eye text-teal-600"></i> Lihat PDF
                       </button>
                     </div>
                   </td>
                 </tr>
               </template>
+              <tr x-show="!teacherData.muridList || teacherData.muridList.length === 0">
+                <td colspan="5" class="p-8 text-center text-slate-400">Tidak ada murid terdaftar di kelompok ini.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1026,28 +1090,40 @@
     </div>
   </div>
 
-  <!-- MODAL 3: RESET PASSWORD AKUN GURU -->
+  <!-- MODAL 3: RESET PASSWORD AKUN GURU & STAFF -->
   <div x-show="modalResetPass.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4" @click.outside="modalResetPass.show = false">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold"><i class="fas fa-key"></i></div>
-          <h3 class="font-bold text-slate-800 text-base">Reset Password Guru</h3>
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-base shadow-sm"><i class="fas fa-key"></i></div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Reset Kata Sandi</h3>
+            <p class="text-[11px] text-slate-500">Ganti password akun pengajar / staff.</p>
+          </div>
         </div>
-        <button @click="modalResetPass.show = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <button @click="modalResetPass.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
       </div>
       <form @submit.prevent="submitResetPasswordGuru()" class="space-y-4 text-xs">
-        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-          <div class="font-bold text-slate-800" x-text="modalResetPass.namaLengkap"></div>
-          <div class="font-mono text-slate-500" x-text="'Username: ' + modalResetPass.username"></div>
+        <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+          <div class="font-bold text-slate-800 text-sm" x-text="modalResetPass.namaLengkap"></div>
+          <div class="flex items-center justify-between text-slate-500 font-mono text-[11px]">
+            <span x-text="'Username: ' + modalResetPass.username"></span>
+            <span class="px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md font-bold text-[10px]" x-text="modalResetPass.role || 'WALI_KELAS'"></span>
+          </div>
         </div>
         <div>
           <label class="block font-bold text-slate-700 mb-1">Kata Sandi Baru *</label>
-          <input type="text" x-model="modalResetPass.newPassword" required placeholder="Masukkan kata sandi baru..." class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-amber-500">
+          <input type="text" x-model="modalResetPass.newPassword" required placeholder="Contoh: guru123 / rahasia2026" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none">
+          <div class="flex items-center gap-2 mt-2">
+            <button type="button" @click="modalResetPass.newPassword = 'guru123'" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold border border-slate-200 transition">
+              <i class="fas fa-magic mr-1 text-amber-600"></i> Gunakan: guru123
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">Kata sandi baru akan langsung berlaku untuk login guru ini.</p>
         </div>
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" @click="modalResetPass.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
-          <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-md">Simpan Password Baru</button>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" @click="modalResetPass.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-md shadow-amber-200 transition">Simpan Password Baru</button>
         </div>
       </form>
     </div>
@@ -1164,35 +1240,50 @@
     </div>
   </div>
 
-  <!-- MODAL 6: UPLOAD RAPORT PDF (GURU) -->
+  <!-- MODAL 6: UPLOAD & EDIT RAPORT PDF (GURU) -->
   <div x-show="modalUpload.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8" @click.outside="modalUpload.show = false">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div>
-          <h3 class="font-bold text-slate-800 text-base">Unggah Raport Digital PDF</h3>
+          <h3 class="font-bold text-slate-800 text-base" x-text="modalUpload.catatanRevisi ? 'Perbaiki & Ajukan Ulang Raport' : 'Unggah Raport Digital PDF'"></h3>
           <p class="text-xs text-slate-500" x-text="'Murid: ' + modalUpload.muridName + ' (NIS: ' + modalUpload.nis + ')'"></p>
         </div>
-        <button @click="modalUpload.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <button @click="modalUpload.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"><i class="fas fa-times"></i></button>
       </div>
+
+      <!-- Alert Box: Catatan Revisi dari Kepala Sekolah -->
+      <template x-if="modalUpload.catatanRevisi">
+        <div class="p-3.5 bg-rose-50 border-2 border-rose-300 rounded-2xl text-rose-900 space-y-1.5 shadow-sm">
+          <div class="font-extrabold flex items-center gap-1.5 text-xs text-rose-700">
+            <i class="fas fa-exclamation-triangle text-rose-600"></i> CATATAN REVISI DARI KEPALA SEKOLAH:
+          </div>
+          <div class="text-xs bg-white p-3 rounded-xl border border-rose-200 font-medium text-slate-800 whitespace-pre-wrap leading-relaxed shadow-inner" x-text="modalUpload.catatanRevisi"></div>
+          <p class="text-[11px] text-rose-700 italic">Silakan perbaiki catatan evaluasi di bawah atau unggah berkas PDF pengganti.</p>
+        </div>
+      </template>
+
       <form @submit.prevent="submitUploadReport()" class="space-y-4 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Pilih File Raport PDF Asli *</label>
-          <input type="file" accept="application/pdf" @change="handleFileSelect($event)" required class="w-full p-2.5 rounded-xl border border-slate-200">
-          <p class="text-[10px] text-slate-400 mt-1">File PDF asli akan langsung tersimpan dan dapat dipratinjau.</p>
+          <label class="block font-bold text-slate-700 mb-1">
+            <span x-text="modalUpload.hasExistingPdf ? 'Ganti Berkas PDF Raport (Opsional)' : 'Pilih Berkas PDF Raport Asli *'"></span>
+          </label>
+          <input type="file" accept="application/pdf" @change="handleFileSelect($event)" :required="!modalUpload.hasExistingPdf" class="w-full p-2.5 rounded-xl border border-slate-200">
+          <p class="text-[10px] text-slate-400 mt-1" x-show="!modalUpload.hasExistingPdf">Pilih file PDF raport hasil penilaian ananda.</p>
+          <p class="text-[10px] text-emerald-600 font-semibold mt-1" x-show="modalUpload.hasExistingPdf">✓ Berkas PDF raport sebelumnya sudah tersimpan. Pilih file baru jika ingin mengganti PDF.</p>
         </div>
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Catatan Evaluasi / Narasi Perkembangan</label>
-          <textarea x-model="modalUpload.catatan" rows="3" placeholder="Tuliskan catatan perkembangan ananda..." class="w-full p-2.5 rounded-xl border border-slate-200"></textarea>
+          <label class="block font-bold text-slate-700 mb-1">Catatan Evaluasi / Narasi Perkembangan Ananda *</label>
+          <textarea x-model="modalUpload.catatan" required rows="4" placeholder="Tuliskan capaian perkembangan, kebiasaan baik, dan aspek bimbingan..." class="w-full p-2.5 rounded-xl border border-slate-200"></textarea>
         </div>
         <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 text-sky-800 flex items-center gap-2">
           <input type="checkbox" id="directSubmitCheck" x-model="modalUpload.directSubmit" class="rounded text-teal-600">
-          <label for="directSubmitCheck" class="font-semibold text-[11px] cursor-pointer">Ajukan langsung ke Kepala Sekolah untuk ditinjau</label>
+          <label for="directSubmitCheck" class="font-semibold text-[11px] cursor-pointer">Ajukan langsung ke Kepala Sekolah untuk ditinjau & di-ACC</label>
         </div>
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button type="button" @click="modalUpload.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
-          <button type="submit" :disabled="loading" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md flex items-center gap-1.5">
+          <button type="button" @click="modalUpload.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition">Batal</button>
+          <button type="submit" :disabled="loading" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md shadow-teal-200 flex items-center gap-1.5 transition">
             <i class="fas fa-cloud-upload-alt"></i>
-            <span x-text="loading ? 'Mengunggah...' : 'Simpan & Unggah'"></span>
+            <span x-text="loading ? 'Menyimpan...' : (modalUpload.catatanRevisi ? 'Kirim Perbaikan ke Kepsek' : 'Simpan & Ajukan Raport')"></span>
           </button>
         </div>
       </form>
@@ -1501,6 +1592,17 @@
           }
 
           // 3. ADMIN STUDENT CRUD
+          if (cleanEp.includes('/admin/students/bulk')) {
+            const list = body.students || [];
+            list.forEach(s => {
+              const idx = this.clientDb.murid.findIndex(m => m.nis === s.nis);
+              if (idx >= 0) this.clientDb.murid[idx] = { ...this.clientDb.murid[idx], ...s };
+              else this.clientDb.murid.push(s);
+            });
+            this.saveClientDb();
+            return { success: true, message: `Berhasil mengimpor ${list.length} data murid.` };
+          }
+
           if (cleanEp.includes('/admin/students') && method === 'POST') {
             const s = body;
             const idx = this.clientDb.murid.findIndex(m => m.nis === s.nis);
@@ -1517,10 +1619,21 @@
             return { success: true, message: 'Data murid berhasil dihapus.' };
           }
 
-          // 4. ADMIN TEACHER CRUD & RESET PASSWORD
+          // 4. ADMIN TEACHER CRUD & RESET PASSWORD (PRIORITIZED)
+          if (cleanEp.includes('/admin/teachers/reset-password')) {
+            const { userId, newPassword } = body;
+            const u = this.clientDb.users.find(x => x.userId === userId);
+            if (u) {
+              u.password = String(newPassword).trim();
+              this.saveClientDb();
+              return { success: true, message: `Password akun ${u.namaLengkap} berhasil direset menjadi: "${u.password}"` };
+            }
+            return { success: false, message: 'Akun guru tidak ditemukan.' };
+          }
+
           if (cleanEp.includes('/admin/teachers') && method === 'POST') {
             const t = body;
-            const idx = this.clientDb.users.findIndex(u => u.userId === t.userId || u.username.toLowerCase() === t.username.toLowerCase());
+            const idx = this.clientDb.users.findIndex(u => u.userId === t.userId || (t.username && u.username.toLowerCase() === t.username.toLowerCase()));
             if (idx >= 0) {
               this.clientDb.users[idx] = { ...this.clientDb.users[idx], ...t };
             } else {
@@ -1530,17 +1643,6 @@
             }
             this.saveClientDb();
             return { success: true, message: 'Data akun guru berhasil disimpan.' };
-          }
-
-          if (cleanEp.includes('/admin/teachers/reset-password')) {
-            const { userId, newPassword } = body;
-            const u = this.clientDb.users.find(x => x.userId === userId);
-            if (u) {
-              u.password = newPassword;
-              this.saveClientDb();
-              return { success: true, message: `Password akun ${u.namaLengkap} berhasil direset.` };
-            }
-            return { success: false, message: 'Akun guru tidak ditemukan.' };
           }
 
           if (cleanEp.includes('/admin/teachers') && method === 'DELETE') {
@@ -1567,7 +1669,20 @@
             return { success: true, message: 'Kelompok berhasil dihapus.' };
           }
 
-          // 6. ADMIN YEAR (TAPEL) CRUD
+          // 6. ADMIN YEAR (TAPEL) CRUD (PRIORITIZED)
+          if (cleanEp.includes('/admin/years/settings')) {
+            const y = this.clientDb.tahun_ajaran.find(t => t.idTahun === body.idTahun);
+            if (y) {
+              y.statusAktif = body.statusAktif;
+              y.statusAksesOrtu = body.statusAksesOrtu;
+              if (body.statusAktif === 'AKTIF') {
+                this.clientDb.tahun_ajaran.forEach(t => { if (t.idTahun !== y.idTahun) t.statusAktif = 'NONAKTIF'; });
+              }
+              this.saveClientDb();
+            }
+            return { success: true, message: 'Pengaturan tahun ajaran disimpan.' };
+          }
+
           if (cleanEp.includes('/admin/years') && method === 'POST') {
             const y = body;
             if (y.statusAktif === 'AKTIF') {
@@ -1585,19 +1700,6 @@
             this.clientDb.tahun_ajaran = this.clientDb.tahun_ajaran.filter(y => y.idTahun !== idY);
             this.saveClientDb();
             return { success: true, message: 'Tahun pelajaran berhasil dihapus.' };
-          }
-
-          if (cleanEp.includes('/admin/years/settings')) {
-            const y = this.clientDb.tahun_ajaran.find(t => t.idTahun === body.idTahun);
-            if (y) {
-              y.statusAktif = body.statusAktif;
-              y.statusAksesOrtu = body.statusAksesOrtu;
-              if (body.statusAktif === 'AKTIF') {
-                this.clientDb.tahun_ajaran.forEach(t => { if (t.idTahun !== y.idTahun) t.statusAktif = 'NONAKTIF'; });
-              }
-              this.saveClientDb();
-            }
-            return { success: true, message: 'Pengaturan tahun ajaran disimpan.' };
           }
 
           if (cleanEp.includes('/admin/reset')) {
@@ -1638,11 +1740,12 @@
             const r = this.clientDb.raport.find(x => x.idRaport === body.idRaport);
             if (r) {
               r.statusApproval = 'DISETUJUI';
+              r.catatanRevisi = ''; // clear revision on approval
               r.reviewedBy = body.kepsekName;
               r.tanggalReview = new Date().toLocaleString('id-ID');
               this.saveClientDb();
             }
-            return { success: true, message: 'Raport berhasil di-ACC!' };
+            return { success: true, message: 'Raport berhasil di-ACC & diterbitkan ke Wali Murid!' };
           }
 
           if (cleanEp.includes('/kepsek/reject')) {
@@ -1661,17 +1764,24 @@
           if (cleanEp.includes('/teacher/class-students')) {
             const kel = this.currentUser?.kelompokDiampu || 'TKA-1';
             const sList = (kel === 'SEMUA') ? this.clientDb.murid : this.clientDb.murid.filter(s => s.idKelompok === kel);
+            const activeY = this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF') || { namaTahun: '2025/2026', semester: 'Ganjil' };
             return {
               success: true,
               data: {
-                infoKelompok: this.clientDb.kelompok.find(k => k.idKelompok === kel) || { namaKelompok: kel },
-                activeTA: { tahun: '2025/2026', semester: 'Ganjil' },
-                stats: { totalSiswa: sList.length, raportDiunggah: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis)).length },
+                infoKelompok: this.clientDb.kelompok.find(k => k.idKelompok === kel) || { idKelompok: kel, namaKelompok: kel },
+                activeTA: { tahun: activeY.namaTahun || '2025/2026', semester: activeY.semester || 'Ganjil' },
+                stats: { 
+                  totalSiswa: sList.length, 
+                  raportDiunggah: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis)).length,
+                  disetujui: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis) && r.statusApproval === 'DISETUJUI').length,
+                  diajukan: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis) && r.statusApproval === 'DIAJUKAN').length,
+                  perluRevisi: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis) && r.statusApproval === 'REVISI').length
+                },
                 muridList: sList.map(s => {
                   const rap = this.clientDb.raport.find(r => r.nis === s.nis) || null;
                   return {
                     ...s,
-                    statusRaport: rap ? (rap.statusApproval === 'DISETUJUI' ? 'DISETUJUI' : (rap.statusApproval === 'REVISI' ? 'REVISI' : 'DIAJUKAN')) : 'BELUM_UPLOAD',
+                    statusRaport: rap ? (rap.statusApproval === 'DISETUJUI' ? 'DISETUJUI' : (rap.statusApproval === 'REVISI' ? 'REVISI' : (rap.statusApproval === 'DRAF' ? 'DRAF' : 'DIAJUKAN'))) : 'BELUM_UPLOAD',
                     raportData: rap
                   };
                 })
@@ -1686,6 +1796,7 @@
             if (rap) {
               rap.catatanPerkembangan = p.catatan;
               rap.statusApproval = p.statusApproval;
+              rap.uploaderUser = p.uploaderUser || rap.uploaderUser;
               if (pdfDataUrl) rap.urlPdf = pdfDataUrl;
             } else {
               this.clientDb.raport.push({
@@ -1697,12 +1808,13 @@
                 catatanPerkembangan: p.catatan,
                 statusApproval: p.statusApproval,
                 catatanRevisi: '',
+                uploaderUser: p.uploaderUser || 'Wali Kelas',
                 urlPdf: pdfDataUrl || 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs/preview',
                 sudahDilihat: false
               });
             }
             this.saveClientDb();
-            return { success: true, message: 'Berkas raport PDF berhasil diunggah & disimpan!' };
+            return { success: true, message: 'Berkas raport PDF berhasil disimpan & diajukan!' };
           }
 
           // 9. PARENT ACTIONS
@@ -1925,11 +2037,16 @@
             userId: t.userId,
             username: t.username,
             namaLengkap: t.namaLengkap,
+            role: t.role,
             newPassword: ''
           };
         },
 
         async submitResetPasswordGuru() {
+          if (!this.modalResetPass.newPassword) {
+            this.showToast('Masukkan kata sandi baru.', 'warning');
+            return;
+          }
           const res = await this.apiCall('/admin/teachers/reset-password', 'POST', {
             userId: this.modalResetPass.userId,
             newPassword: this.modalResetPass.newPassword
@@ -2121,12 +2238,16 @@
         },
 
         openUploadModal(m) {
+          const hasPdf = !!(m.raportData && m.raportData.urlPdf);
           this.modalUpload = {
             show: true,
             nis: m.nis,
             muridName: m.namaLengkap,
             idKelompok: m.idKelompok,
             catatan: m.raportData?.catatanPerkembangan || '',
+            catatanRevisi: m.raportData?.catatanRevisi || '',
+            hasExistingPdf: hasPdf,
+            existingPdfUrl: m.raportData?.urlPdf || '',
             directSubmit: true,
             fileBase64: '',
             fileName: ''
@@ -2159,7 +2280,7 @@
           const res = await this.apiCall('/teacher/upload-report', 'POST', payload);
           if (res.success) {
             this.modalUpload.show = false;
-            this.showToast(res.message || 'Raport berhasil disimpan & diajukan!', 'success');
+            this.showToast(this.modalUpload.catatanRevisi ? 'Perbaikan raport berhasil dikirimkan ke Kepala Sekolah!' : (res.message || 'Raport berhasil disimpan & diajukan!'), 'success');
             this.loadTeacherData();
           }
         },

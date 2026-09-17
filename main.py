@@ -150,6 +150,23 @@ async def save_teacher(teacher: TeacherModel, operator: Optional[str] = "ADMIN")
         return {"success": True, "message": "Data akun berhasil disimpan."}
     raise HTTPException(status_code=400, detail="Gagal menyimpan akun.")
 
+@app.post("/api/admin/teachers/reset-password")
+async def reset_teacher_password(payload: Dict[str, Any]):
+    user_id = payload.get("userId", "")
+    new_password = payload.get("newPassword", "")
+    operator = payload.get("operator", "ADMIN")
+    success = db_manager.reset_teacher_password(user_id, new_password, operator)
+    if success:
+        return {"success": True, "message": "Password akun guru berhasil direset."}
+    raise HTTPException(status_code=400, detail="Gagal mereset password.")
+
+@app.delete("/api/admin/teachers/{user_id}")
+async def delete_teacher(user_id: str, operator: Optional[str] = "ADMIN"):
+    success = db_manager.delete_teacher(user_id, operator)
+    if success:
+        return {"success": True, "message": "Akun guru berhasil dihapus."}
+    raise HTTPException(status_code=404, detail="Akun tidak ditemukan.")
+
 @app.post("/api/admin/classes")
 async def save_class(cls: ClassModel, operator: Optional[str] = "ADMIN"):
     success = db_manager.save_class(cls.model_dump(), operator)
