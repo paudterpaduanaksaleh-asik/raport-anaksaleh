@@ -1103,6 +1103,7 @@
           }
 
           if (cleanEp.includes('/admin/all-data')) {
+            const activeY = this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF') || this.clientDb.tahun_ajaran[0];
             return {
               success: true,
               data: {
@@ -1110,9 +1111,22 @@
                   totalMurid: this.clientDb.murid.length,
                   totalGuru: this.clientDb.users.filter(x => x.role === 'WALI_KELAS').length,
                   totalKelompok: this.clientDb.kelompok.length,
-                  tahunAjaranAktif: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.namaTahun || '2025/2026',
-                  semesterAktif: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.semester || 'Ganjil',
-                  statusAksesOrtu: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.statusAksesOrtu || 'DIBUKA'
+                  tahunAjaranAktif: activeY?.namaTahun || '2025/2026',
+                  semesterAktif: activeY?.semester || 'Ganjil',
+                  statusAksesOrtu: activeY?.statusAksesOrtu || 'DIBUKA',
+                  activeTA: activeY || { namaTahun: '2025/2026', semester: 'Ganjil', statusAksesOrtu: 'DIBUKA' },
+                  perJenjang: {
+                    'Playgroup (PG)': this.clientDb.murid.filter(m => m.jenjang && m.jenjang.includes('PG')).length,
+                    'TK-A': this.clientDb.murid.filter(m => m.jenjang === 'TK-A').length,
+                    'TK-B': this.clientDb.murid.filter(m => m.jenjang === 'TK-B').length,
+                    'Daycare': this.clientDb.murid.filter(m => m.jenjang === 'Daycare').length
+                  },
+                  raportStats: {
+                    total: this.clientDb.raport.length,
+                    disetujui: this.clientDb.raport.filter(r => r.statusApproval === 'DISETUJUI').length,
+                    diajukan: this.clientDb.raport.filter(r => r.statusApproval === 'DIAJUKAN').length,
+                    revisi: this.clientDb.raport.filter(r => r.statusApproval === 'REVISI').length
+                  }
                 },
                 students: this.clientDb.murid,
                 teachers: this.clientDb.users,
