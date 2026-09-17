@@ -892,17 +892,39 @@
   <!-- MODAL: PDF VIEWER -->
   <div x-show="modalPdf.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white rounded-3xl max-w-4xl w-full h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
       <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <div class="flex items-center gap-2">
-          <i class="fas fa-file-pdf text-rose-500 text-lg"></i>
-          <h3 class="font-bold text-slate-800 text-base" x-text="modalPdf.title">Pratinjau Raport Digital</h3>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+            <i class="fas fa-file-pdf text-base"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm sm:text-base leading-tight" x-text="modalPdf.title">Pratinjau Raport Digital</h3>
+            <p class="text-[11px] text-slate-500">PAUD Terpadu Anak Saleh</p>
+          </div>
         </div>
-        <button @click="modalPdf.show = false" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1">
-          <i class="fas fa-times"></i> Tutup
-        </button>
+        <div class="flex items-center gap-2">
+          <a :href="modalPdf.rawUrl" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition">
+            <i class="fas fa-external-link-alt"></i> Buka / Unduh PDF
+          </a>
+          <button @click="modalPdf.show = false" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1 transition">
+            <i class="fas fa-times"></i> Tutup
+          </button>
+        </div>
       </div>
+      <!-- Iframe Container -->
       <div class="flex-grow bg-slate-100 relative">
-        <iframe :src="modalPdf.url" class="w-full h-full border-0" allow="fullscreen"></iframe>
+        <iframe :src="modalPdf.url" class="w-full h-full border-0" allow="fullscreen" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
+      </div>
+      <!-- Modal Footer Info -->
+      <div class="px-5 py-2.5 bg-amber-50 border-t border-amber-200 text-amber-900 text-[11px] sm:text-xs flex items-center justify-between">
+        <span class="flex items-center gap-1.5">
+          <i class="fas fa-info-circle text-amber-600"></i>
+          Jika pratinjau berkas terhalang oleh pengaturan keamanan browser, klik tombol <b>Buka / Unduh PDF</b> di kanan atas.
+        </span>
+        <a :href="modalPdf.rawUrl" target="_blank" rel="noopener noreferrer" class="font-bold text-teal-700 hover:text-teal-900 underline whitespace-nowrap ml-2">
+          Buka Tab Baru &rarr;
+        </a>
       </div>
     </div>
   </div>
@@ -1534,7 +1556,31 @@
 
         // ================= PDF MODAL =================
         openPdfViewer(url, title) {
-          this.modalPdf = { show: true, url: url, title: title || 'Pratinjau Raport Digital' };
+          if (!url) {
+            this.showToast('Tautan berkas PDF raport belum tersedia.', 'warning');
+            return;
+          }
+
+          let embedUrl = url;
+          let rawUrl = url;
+
+          // Check if Google Drive link (e.g. /file/d/ID/view, id=ID, or direct ID)
+          const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (driveMatch && driveMatch[1]) {
+            const fileId = driveMatch[1];
+            embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            rawUrl = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+          } else if (url.startsWith('http')) {
+            // External PDF link via Google Docs Viewer
+            embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+          }
+
+          this.modalPdf = {
+            show: true,
+            url: embedUrl,
+            rawUrl: rawUrl,
+            title: title || 'Pratinjau Raport Digital'
+          };
         }
       };
     }
