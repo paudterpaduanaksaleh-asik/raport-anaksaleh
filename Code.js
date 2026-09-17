@@ -19,9 +19,11 @@ var CONFIG = {
  * Entry point HTTP GET untuk Google Apps Script Web App
  */
 function doGet(e) {
-  // Jika dipanggil via API query parameter
-  if (e && e.parameter && e.parameter.action) {
-    var action = e.parameter.action;
+  var action = e && e.parameter ? e.parameter.action : null;
+  var callback = e && e.parameter ? e.parameter.callback : null;
+
+  // Jika dipanggil via API query parameter (JSON atau JSONP)
+  if (action) {
     var args = [];
     if (e.parameter.args) {
       try {
@@ -31,8 +33,15 @@ function doGet(e) {
       }
     }
     var result = executeAction(action, args);
-    return ContentService.createTextOutput(JSON.stringify(result))
-      .setMimeType(ContentService.MimeType.JSON);
+
+    if (callback) {
+      var jsonpText = String(callback) + "(" + JSON.stringify(result) + ");";
+      return ContentService.createTextOutput(jsonpText)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify(result))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
 
   var template = HtmlService.createTemplateFromFile('Index');
