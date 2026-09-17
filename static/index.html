@@ -49,14 +49,14 @@
     }
 
     .glass-card {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.7);
     }
 
     .glass-header {
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(226, 232, 240, 0.8);
@@ -76,18 +76,24 @@
   <!-- ==========================================
        TOP NAVBAR
        ========================================== -->
-  <header class="glass-header sticky top-0 z-40 transition-all">
+  <header class="glass-header sticky top-0 z-40 transition-all shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <!-- Logo & Nama Sekolah -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white text-xl font-bold shadow-md">
-          🌱
-        </div>
+        <!-- Logo Image or Emoji -->
+        <template x-if="schoolSettings.logoType === 'image' && schoolSettings.logoImg">
+          <img :src="schoolSettings.logoImg" alt="Logo Sekolah" class="w-10 h-10 rounded-2xl object-cover shadow-md border border-white">
+        </template>
+        <template x-if="schoolSettings.logoType !== 'image' || !schoolSettings.logoImg">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-600 to-emerald-400 flex items-center justify-center text-white text-xl font-bold shadow-md"
+               x-text="schoolSettings.logoEmoji || '🌱'">
+          </div>
+        </template>
         <div>
-          <h1 class="text-base sm:text-lg font-black font-brand text-slate-800 leading-tight">
+          <h1 class="text-base sm:text-lg font-black font-brand text-slate-800 leading-tight" x-text="schoolSettings.name">
             PG - TK - DAYCARE <span class="text-teal-600">ANAK SALEH</span>
           </h1>
-          <p class="text-[11px] font-medium text-slate-500 hidden sm:block">Portal Raport & Perkembangan Anak Usia Dini</p>
+          <p class="text-[11px] font-medium text-slate-500 hidden sm:block" x-text="schoolSettings.tagline">Portal Raport & Perkembangan Anak Usia Dini</p>
         </div>
       </div>
 
@@ -112,11 +118,11 @@
     <!-- 1. LOGIN SCREEN -->
     <div x-show="!currentUser" x-cloak class="max-w-md mx-auto my-6 space-y-6">
       <div class="text-center space-y-2">
-        <div class="w-20 h-20 bg-gradient-to-tr from-teal-500 to-amber-400 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl border-4 border-white animate-float">
-          📖
+        <div class="w-20 h-20 bg-gradient-to-tr from-teal-500 to-amber-400 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-xl border-4 border-white animate-float"
+             x-text="schoolSettings.logoEmoji || '📖'">
         </div>
-        <h2 class="text-2xl font-black font-brand text-slate-800">Sistem Raport Digital</h2>
-        <p class="text-xs text-slate-600">Silakan pilih peran Anda untuk masuk ke sistem.</p>
+        <h2 class="text-2xl font-black font-brand text-slate-800" x-text="schoolSettings.name">Sistem Raport Digital</h2>
+        <p class="text-xs text-slate-600" x-text="schoolSettings.tagline">Silakan pilih peran Anda untuk masuk ke sistem.</p>
       </div>
 
       <div class="glass-card rounded-3xl p-6 shadow-xl border border-white/80 space-y-5">
@@ -146,16 +152,16 @@
             <label class="block text-xs font-bold text-slate-700 mb-1.5">Nomor Induk Siswa (NIS):</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-id-card"></i></span>
-              <input type="text" x-model="loginForm.identifier" required placeholder="Contoh: 202601001" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <input type="text" x-model="loginForm.identifier" required placeholder="Contoh: 202601" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1.5">PIN Akses Raport:</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><i class="fas fa-key"></i></span>
-              <input type="password" x-model="loginForm.secret" required placeholder="Contoh: 150321" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <input type="password" x-model="loginForm.secret" required placeholder="Contoh: 1234" class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50/80 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
             </div>
-            <p class="text-[10px] text-slate-400 mt-1">Default PIN adalah tanggal lahir ananda (DDMMYY).</p>
+            <p class="text-[10px] text-slate-400 mt-1">Default PIN demo: <span class="font-bold text-teal-600">1234</span></p>
           </div>
           <button type="submit" :disabled="loading" class="w-full py-3 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-sm rounded-2xl shadow-lg transition flex items-center justify-center gap-2">
             <span x-show="!loading">Masuk ke Portal Wali Murid</span>
@@ -202,17 +208,17 @@
         <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-sm mb-2">
-              <i class="fas fa-shield-alt text-amber-300"></i> Portal Administrator (Python Engine)
+              <i class="fas fa-shield-alt text-amber-300"></i> Portal Administrator Sekolah
             </div>
-            <h2 class="text-2xl md:text-3xl font-extrabold font-brand">Panel Kontrol Raport Digital</h2>
-            <p class="text-teal-100 text-sm mt-1">Kelola data master murid, guru, kelompok, dan hak akses periode.</p>
+            <h2 class="text-2xl md:text-3xl font-extrabold font-brand" x-text="schoolSettings.name">Panel Kontrol Raport Digital</h2>
+            <p class="text-teal-100 text-sm mt-1">Kelola data master murid, guru, rombel, tahun pelajaran, dan tampilan dashboard.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button @click="loadAdminData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-sm font-medium transition flex items-center gap-2 backdrop-blur-sm">
               <i class="fas fa-sync-alt" :class="loading && 'fa-spin'"></i> Refresh Data
             </button>
             <button @click="resetSimulation()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-1.5">
-              <i class="fas fa-trash-restore"></i> Reset Simulasi
+              <i class="fas fa-trash-restore"></i> Reset Data
             </button>
           </div>
         </div>
@@ -223,9 +229,11 @@
             <p class="text-xs text-teal-200 font-medium">Total Murid Aktif</p>
             <p class="text-2xl font-bold mt-1" x-text="adminData.summary?.totalMurid || 0">0</p>
             <div class="text-[11px] text-teal-100/80 mt-1 truncate">
-              PG: <span x-text="adminData.summary?.perJenjang?.['Playgroup (PG)'] || 0"></span> | 
-              TK-A: <span x-text="adminData.summary?.perJenjang?.['TK-A'] || 0"></span> | 
-              TK-B: <span x-text="adminData.summary?.perJenjang?.['TK-B'] || 0"></span>
+              PG A: <span x-text="adminData.summary?.perJenjang?.['PG A'] || 0"></span> | 
+              PG B: <span x-text="adminData.summary?.perJenjang?.['PG B'] || 0"></span> | 
+              TK A: <span x-text="adminData.summary?.perJenjang?.['TK A'] || 0"></span> | 
+              TK B: <span x-text="adminData.summary?.perJenjang?.['TK B'] || 0"></span> | 
+              Daycare: <span x-text="adminData.summary?.perJenjang?.['Daycare'] || 0"></span>
             </div>
           </div>
           <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
@@ -234,9 +242,9 @@
             <p class="text-[11px] text-teal-100/80 mt-1"><span x-text="adminData.summary?.totalKelompok || 0"></span> Kelompok Belajar</p>
           </div>
           <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <p class="text-xs text-teal-200 font-medium">Tahun Ajaran Aktif</p>
+            <p class="text-xs text-teal-200 font-medium">Tahun Pelajaran Aktif</p>
             <p class="text-lg font-bold mt-1 truncate" x-text="adminData.summary?.activeTA?.namaTahun + ' (' + adminData.summary?.activeTA?.semester + ')'">-</p>
-            <p class="text-[11px] text-amber-300 font-semibold mt-1" x-text="'Akses Ortu: ' + (adminData.summary?.activeTA?.statusAksesOrtu || 'DITUTUP')"></p>
+            <p class="text-[11px] text-amber-300 font-semibold mt-1" x-text="'Akses Ortu: ' + (adminData.summary?.activeTA?.statusAksesOrtu || 'DIBUKA')"></p>
           </div>
           <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <p class="text-xs text-teal-200 font-medium">Status Raport Digital</p>
@@ -249,33 +257,37 @@
       <!-- Admin Sub Navigation Tabs -->
       <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200 text-sm font-bold">
         <button @click="adminTab = 'siswa'" :class="adminTab === 'siswa' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-xl transition flex items-center gap-2">
-          <i class="fas fa-user-graduate"></i> Data Murid
+          <i class="fas fa-user-graduate"></i> 1. Data Murid & Akun Ortu
         </button>
         <button @click="adminTab = 'guru'" :class="adminTab === 'guru' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-xl transition flex items-center gap-2">
-          <i class="fas fa-chalkboard-teacher"></i> Data Guru & Kepsek
+          <i class="fas fa-chalkboard-teacher"></i> 2. Data Guru & Reset Password
         </button>
         <button @click="adminTab = 'kelas'" :class="adminTab === 'kelas' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-xl transition flex items-center gap-2">
-          <i class="fas fa-school"></i> Data Kelompok
+          <i class="fas fa-school"></i> 3. Data Kelompok (Rombel)
         </button>
         <button @click="adminTab = 'tahun'" :class="adminTab === 'tahun' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-xl transition flex items-center gap-2">
-          <i class="fas fa-calendar-alt"></i> Tahun Pelajaran & Akses
+          <i class="fas fa-calendar-alt"></i> 4. Tahun Pelajaran & Akses
+        </button>
+        <button @click="adminTab = 'branding'" :class="adminTab === 'branding' ? 'bg-teal-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+          <i class="fas fa-palette"></i> 5. Pengaturan Dashboard & Logo
         </button>
       </div>
 
-      <!-- TAB 1: DATA MURID -->
+      <!-- TAB 1: DATA MURID & AKUN ORTU -->
       <div x-show="adminTab === 'siswa'" class="glass-card rounded-2xl p-5 space-y-4">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h3 class="font-bold text-lg text-slate-800">Master Data Murid</h3>
-            <p class="text-xs text-slate-500">Kelola informasi murid PG, TK-A, TK-B, dan Daycare Anak Saleh.</p>
+            <h3 class="font-bold text-lg text-slate-800">Master Data Murid & Akun Wali Murid</h3>
+            <p class="text-xs text-slate-500">Kelola identitas murid dan PIN login untuk Orang Tua (PG A, PG B, TK A, TK B, Daycare).</p>
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <input type="text" x-model="searchSiswa" placeholder="Cari NIS / Nama Murid..." class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none w-48">
-            <select x-model="filterJenjang" class="px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-teal-500">
+            <select x-model="filterJenjang" class="px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-teal-500 font-semibold">
               <option value="SEMUA">Semua Jenjang</option>
-              <option value="Playgroup (PG)">Playgroup (PG)</option>
-              <option value="TK-A">TK-A</option>
-              <option value="TK-B">TK-B</option>
+              <option value="PG A">PG A</option>
+              <option value="PG B">PG B</option>
+              <option value="TK A">TK A</option>
+              <option value="TK B">TK B</option>
               <option value="Daycare">Daycare</option>
             </select>
             <button @click="openModalStudent(null)" class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
@@ -289,11 +301,12 @@
             <thead>
               <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
                 <th class="p-3">NIS</th>
-                <th class="p-3">Nama Lengkap</th>
+                <th class="p-3">Nama Murid</th>
                 <th class="p-3">Jenjang</th>
                 <th class="p-3">Kelompok</th>
-                <th class="p-3">Orang Tua / Kontak</th>
-                <th class="p-3">PIN Akses</th>
+                <th class="p-3">Nama Orang Tua</th>
+                <th class="p-3">No. WA Ortu</th>
+                <th class="p-3">PIN Ortu</th>
                 <th class="p-3 text-center">Status</th>
                 <th class="p-3 text-center">Aksi</th>
               </tr>
@@ -306,41 +319,51 @@
                     <div class="font-bold text-slate-800" x-text="s.namaLengkap"></div>
                     <div class="text-xs text-slate-500" x-text="'Panggilan: ' + (s.namaPanggilan || '-') + ' (' + (s.jenisKelamin || 'L') + ')'"></div>
                   </td>
-                  <td class="p-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-800" x-text="s.jenjang"></span></td>
-                  <td class="p-3 font-semibold text-teal-700" x-text="s.idKelompok"></td>
                   <td class="p-3">
-                    <div class="text-xs" x-text="(s.namaAyah || '') + (s.namaIbu ? ' & ' + s.namaIbu : '')"></div>
-                    <div class="text-[11px] text-slate-500" x-text="s.kontakOrtu || '-'"></div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                          :class="{
+                            'bg-amber-100 text-amber-800': s.jenjang === 'PG A',
+                            'bg-orange-100 text-orange-800': s.jenjang === 'PG B',
+                            'bg-sky-100 text-sky-800': s.jenjang === 'TK A',
+                            'bg-indigo-100 text-indigo-800': s.jenjang === 'TK B',
+                            'bg-rose-100 text-rose-800': s.jenjang === 'Daycare'
+                          }"
+                          x-text="s.jenjang"></span>
                   </td>
-                  <td class="p-3 font-mono text-xs font-bold text-slate-600" x-text="s.pin"></td>
+                  <td class="p-3 font-semibold text-teal-700" x-text="s.idKelompok"></td>
+                  <td class="p-3 text-xs" x-text="(s.namaAyah || '') + (s.namaIbu ? ' / ' + s.namaIbu : '') || '-'"></td>
+                  <td class="p-3 text-xs font-mono text-slate-600" x-text="s.kontakOrtu || '-'"></td>
+                  <td class="p-3">
+                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 font-mono text-xs font-bold text-slate-700" x-text="s.pin || '1234'"></span>
+                  </td>
                   <td class="p-3 text-center">
                     <span class="px-2 py-0.5 rounded-full text-xs font-bold" :class="s.status === 'AKTIF' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" x-text="s.status"></span>
                   </td>
                   <td class="p-3 text-center">
                     <div class="flex items-center justify-center gap-1.5">
-                      <button @click="openModalStudent(s)" class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs" title="Edit"><i class="fas fa-edit"></i></button>
-                      <button @click="deleteStudent(s.nis, s.namaLengkap)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs" title="Hapus"><i class="fas fa-trash"></i></button>
+                      <button @click="openModalStudent(s)" class="p-1.5 px-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold" title="Edit"><i class="fas fa-edit mr-1"></i> Edit</button>
+                      <button @click="deleteStudent(s.nis, s.namaLengkap)" class="p-1.5 px-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold" title="Hapus"><i class="fas fa-trash"></i></button>
                     </div>
                   </td>
                 </tr>
               </template>
               <tr x-show="filteredStudents.length === 0">
-                <td colspan="8" class="p-8 text-center text-slate-400">Tidak ada data murid yang sesuai.</td>
+                <td colspan="9" class="p-8 text-center text-slate-400">Tidak ada data murid yang sesuai.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- TAB 2: DATA GURU & KEPSEK -->
+      <!-- TAB 2: DATA GURU & RESET PASSWORD -->
       <div x-show="adminTab === 'guru'" class="glass-card rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="font-bold text-lg text-slate-800">Daftar Guru & Kepala Sekolah</h3>
-            <p class="text-xs text-slate-500">Kelola akun dan penugasan kelompok belajar.</p>
+            <h3 class="font-bold text-lg text-slate-800">Daftar Guru, Wali Kelas & Kepala Sekolah</h3>
+            <p class="text-xs text-slate-500">Kelola akun, username login, reset password guru, dan penugasan rombel (1 wali kelas per kelompok).</p>
           </div>
           <button @click="openModalTeacher(null)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
-            <i class="fas fa-plus-circle"></i> Tambah Pengguna
+            <i class="fas fa-plus-circle"></i> + Tambah Akun Guru
           </button>
         </div>
 
@@ -351,11 +374,11 @@
                 <th class="p-3">ID User</th>
                 <th class="p-3">Nama Lengkap</th>
                 <th class="p-3">Username</th>
-                <th class="p-3">Role</th>
+                <th class="p-3">Peran (Role)</th>
                 <th class="p-3">Kelompok Diampu</th>
-                <th class="p-3">Kontak WA</th>
+                <th class="p-3">No. WhatsApp</th>
                 <th class="p-3 text-center">Status</th>
-                <th class="p-3 text-center">Aksi</th>
+                <th class="p-3 text-center">Aksi & Reset Sandi</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -363,21 +386,31 @@
                 <tr class="hover:bg-slate-50 transition">
                   <td class="p-3 font-mono text-xs text-slate-500" x-text="t.userId"></td>
                   <td class="p-3 font-bold text-slate-800" x-text="t.namaLengkap"></td>
-                  <td class="p-3 font-mono text-xs text-slate-600" x-text="t.username"></td>
+                  <td class="p-3 font-mono text-xs text-slate-600">
+                    <span class="px-2 py-0.5 bg-slate-100 rounded-md font-bold" x-text="t.username"></span>
+                  </td>
                   <td class="p-3">
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-bold" 
                           :class="t.role === 'KEPSEK' ? 'bg-purple-100 text-purple-800' : (t.role === 'ADMIN' ? 'bg-slate-800 text-white' : 'bg-teal-100 text-teal-800')"
                           x-text="getRoleDisplayName(t.role)"></span>
                   </td>
                   <td class="p-3 font-semibold text-teal-700" x-text="t.kelompokDiampu || '-'"></td>
-                  <td class="p-3 text-xs" x-text="t.kontakWa || '-'"></td>
+                  <td class="p-3 text-xs font-mono" x-text="t.kontakWa || '-'"></td>
                   <td class="p-3 text-center">
                     <span class="px-2 py-0.5 rounded-full text-xs font-bold" :class="t.status === 'AKTIF' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'" x-text="t.status"></span>
                   </td>
                   <td class="p-3 text-center">
-                    <button @click="openModalTeacher(t)" class="p-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
-                      <i class="fas fa-edit mr-1"></i> Edit
-                    </button>
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button @click="openModalResetPassword(t)" class="p-1.5 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold border border-amber-200 shadow-sm" title="Reset Password">
+                        <i class="fas fa-key mr-1"></i> Reset Password
+                      </button>
+                      <button @click="openModalTeacher(t)" class="p-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button x-show="t.role !== 'ADMIN'" @click="deleteTeacher(t.userId, t.namaLengkap)" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </template>
@@ -386,15 +419,15 @@
         </div>
       </div>
 
-      <!-- TAB 3: DATA KELOMPOK -->
+      <!-- TAB 3: DATA KELOMPOK (ROMBEL) -->
       <div x-show="adminTab === 'kelas'" class="glass-card rounded-2xl p-5 space-y-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 class="font-bold text-lg text-slate-800">Data Kelompok Belajar</h3>
-            <p class="text-xs text-slate-500">Kelompok belajar dan wali kelas yang bertugas.</p>
+            <h3 class="font-bold text-lg text-slate-800">Data Kelompok Belajar (Rombel)</h3>
+            <p class="text-xs text-slate-500">Kelompok belajar, jenjang, penetapan wali kelas (1 wali kelas untuk 1 kelompok), dan daftar murid terdaftar.</p>
           </div>
-          <button @click="openModalClass(null)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
-            <i class="fas fa-plus-circle"></i> Tambah Kelompok
+          <button @click="openModalClass(null)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 self-start">
+            <i class="fas fa-plus-circle"></i> + Tambah Kelompok
           </button>
         </div>
 
@@ -402,14 +435,34 @@
           <template x-for="c in adminData.classes" :key="c.idKelompok">
             <div class="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3 hover:shadow-md transition">
               <div class="flex items-center justify-between">
-                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-teal-100 text-teal-800" x-text="c.jenjang"></span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold"
+                      :class="{
+                        'bg-amber-100 text-amber-800': c.jenjang === 'PG A',
+                        'bg-orange-100 text-orange-800': c.jenjang === 'PG B',
+                        'bg-sky-100 text-sky-800': c.jenjang === 'TK A',
+                        'bg-indigo-100 text-indigo-800': c.jenjang === 'TK B',
+                        'bg-rose-100 text-rose-800': c.jenjang === 'Daycare'
+                      }"
+                      x-text="c.jenjang"></span>
                 <span class="text-xs font-bold text-slate-500 font-mono" x-text="c.idKelompok"></span>
               </div>
               <h4 class="font-extrabold text-slate-800 text-base" x-text="c.namaKelompok"></h4>
-              <div class="text-xs text-slate-600 space-y-1">
-                <div><i class="fas fa-user-tie text-teal-600 mr-1.5"></i> Wali: <b x-text="c.namaWaliKelas || 'Belum ditugaskan'"></b></div>
-                <div><i class="fas fa-child text-indigo-600 mr-1.5"></i> Murid Terdaftar: <b x-text="c.jumlahMurid || 0"></b> / <span x-text="c.kapasitas || 15"></span> Anak</div>
+              <div class="text-xs text-slate-600 space-y-1.5">
+                <div><i class="fas fa-chalkboard-teacher text-teal-600 mr-1.5"></i> Wali Kelas: <b class="text-slate-800" x-text="c.namaWaliKelas || 'Belum ditugaskan'"></b></div>
+                <div><i class="fas fa-users text-indigo-600 mr-1.5"></i> Kapasitas: <b x-text="getStudentsInClass(c.idKelompok).length"></b> / <span x-text="c.kapasitas || 15"></span> Anak</div>
               </div>
+
+              <!-- List Murid di Kelompok Ini -->
+              <div class="pt-2 border-t border-slate-100">
+                <div class="text-[11px] font-bold text-slate-500 mb-1">Daftar Murid di Kelompok Ini:</div>
+                <div class="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                  <template x-for="m in getStudentsInClass(c.idKelompok)" :key="m.nis">
+                    <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-semibold" x-text="m.namaLengkap"></span>
+                  </template>
+                  <span x-show="getStudentsInClass(c.idKelompok).length === 0" class="text-[10px] text-slate-400 italic">Belum ada murid di kelompok ini.</span>
+                </div>
+              </div>
+
               <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button @click="openModalClass(c)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"><i class="fas fa-edit mr-1"></i> Edit</button>
                 <button @click="deleteClass(c.idKelompok, c.namaKelompok)" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold"><i class="fas fa-trash mr-1"></i> Hapus</button>
@@ -419,17 +472,23 @@
         </div>
       </div>
 
-      <!-- TAB 4: TAHUN AJARAN -->
+      <!-- TAB 4: TAHUN PELAJARAN (TAPEL) CRUD -->
       <div x-show="adminTab === 'tahun'" class="glass-card rounded-2xl p-5 space-y-4">
-        <div>
-          <h3 class="font-bold text-lg text-slate-800">Periode Tahun Pelajaran & Akses Raport Ortu</h3>
-          <p class="text-xs text-slate-500">Buka atau tutup akses raport digital untuk wali murid.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="font-bold text-lg text-slate-800">Tahun Pelajaran & Akses Raport Ortu</h3>
+            <p class="text-xs text-slate-500">Kelola tahun ajaran aktif, semester, dan buka/tutup akses raport untuk wali murid.</p>
+          </div>
+          <button @click="openModalYear(null)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5 self-start">
+            <i class="fas fa-plus-circle"></i> + Tambah Tahun Pelajaran
+          </button>
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-slate-200">
           <table class="w-full text-left border-collapse text-sm">
             <thead>
               <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
+                <th class="p-3">ID Periode</th>
                 <th class="p-3">Tahun Pelajaran</th>
                 <th class="p-3">Semester</th>
                 <th class="p-3 text-center">Status Periode</th>
@@ -440,6 +499,7 @@
             <tbody class="divide-y divide-slate-200">
               <template x-for="y in adminData.years" :key="y.idTahun">
                 <tr class="hover:bg-slate-50 transition">
+                  <td class="p-3 font-mono text-xs text-slate-500" x-text="y.idTahun"></td>
                   <td class="p-3 font-bold text-slate-800" x-text="y.namaTahun"></td>
                   <td class="p-3 font-semibold text-slate-700" x-text="y.semester"></td>
                   <td class="p-3 text-center">
@@ -449,9 +509,17 @@
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold" :class="y.statusAksesOrtu === 'DIBUKA' ? 'bg-teal-100 text-teal-800' : 'bg-rose-100 text-rose-800'" x-text="y.statusAksesOrtu"></span>
                   </td>
                   <td class="p-3 text-center">
-                    <button @click="toggleYearAccess(y)" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
-                      <i class="fas fa-sliders-h mr-1"></i> Atur Akses
-                    </button>
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button @click="openModalYear(y)" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                      </button>
+                      <button @click="toggleYearAccess(y)" class="px-2.5 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold">
+                        <i class="fas fa-sliders-h mr-1"></i> Switch Akses
+                      </button>
+                      <button x-show="y.statusAktif !== 'AKTIF'" @click="deleteYear(y.idTahun)" class="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </template>
@@ -459,6 +527,101 @@
           </table>
         </div>
       </div>
+
+      <!-- TAB 5: PENGATURAN DASHBOARD & LOGO SEKOLAH -->
+      <div x-show="adminTab === 'branding'" class="glass-card rounded-2xl p-6 space-y-6">
+        <div>
+          <h3 class="font-bold text-lg text-slate-800">Pengaturan Tampilan Dashboard & Logo Sekolah</h3>
+          <p class="text-xs text-slate-500">Kustomisasi identitas visual sekolah, nama lembaga, logo, dan tema warna.</p>
+        </div>
+
+        <!-- Live Preview Banner -->
+        <div class="p-6 rounded-3xl bg-gradient-to-r from-teal-700 to-emerald-600 text-white shadow-lg space-y-3">
+          <div class="text-xs font-bold text-teal-200 uppercase tracking-wide">Pratinjau Header & Identitas Sekolah</div>
+          <div class="flex items-center gap-4">
+            <template x-if="schoolSettings.logoType === 'image' && schoolSettings.logoImg">
+              <img :src="schoolSettings.logoImg" alt="Logo" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md">
+            </template>
+            <template x-if="schoolSettings.logoType !== 'image' || !schoolSettings.logoImg">
+              <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-md border border-white/30"
+                   x-text="schoolSettings.logoEmoji || '🌱'">
+              </div>
+            </template>
+            <div>
+              <h2 class="text-xl md:text-2xl font-black font-brand" x-text="schoolSettings.name || 'PG - TK - DAYCARE ANAK SALEH'"></h2>
+              <p class="text-xs md:text-sm text-teal-100" x-text="schoolSettings.tagline || 'Portal Raport & Perkembangan Anak Usia Dini'"></p>
+              <p class="text-[11px] text-teal-200/80 mt-0.5" x-text="schoolSettings.alamat || '-'"></p>
+            </div>
+          </div>
+        </div>
+
+        <form @submit.prevent="saveSchoolSettingsSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+          <!-- Nama Sekolah -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Nama Sekolah / Lembaga *</label>
+            <input type="text" x-model="schoolSettings.name" required class="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500">
+          </div>
+
+          <!-- Tagline -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Tagline / Slogan Sekolah</label>
+            <input type="text" x-model="schoolSettings.tagline" class="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-teal-500">
+          </div>
+
+          <!-- Logo Type -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Jenis Logo Sekolah</label>
+            <div class="flex items-center gap-4 pt-1">
+              <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700">
+                <input type="radio" value="emoji" x-model="schoolSettings.logoType" class="text-teal-600">
+                <span>Icon Emoji Ceria</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer font-semibold text-slate-700">
+                <input type="radio" value="image" x-model="schoolSettings.logoType" class="text-teal-600">
+                <span>Upload / URL Gambar Logo</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Logo Emoji Picker -->
+          <div x-show="schoolSettings.logoType === 'emoji'" class="space-y-1">
+            <label class="block font-bold text-slate-700">Pilih Icon Emoji Ceria</label>
+            <div class="flex flex-wrap gap-2 pt-1">
+              <template x-for="emo in ['🌱', '🏫', '⭐', '📖', '🎨', '🌈', '🚀', '🧸', '🕌', '🎒', '🌸', '🌞']" :key="emo">
+                <button type="button" @click="schoolSettings.logoEmoji = emo" 
+                        :class="schoolSettings.logoEmoji === emo ? 'bg-teal-600 text-white ring-2 ring-teal-400 scale-110' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'"
+                        class="w-10 h-10 rounded-xl text-xl flex items-center justify-center transition" x-text="emo"></button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Logo Image URL / File -->
+          <div x-show="schoolSettings.logoType === 'image'" class="space-y-1">
+            <label class="block font-bold text-slate-700">URL Gambar Logo atau Upload File</label>
+            <input type="text" x-model="schoolSettings.logoImg" placeholder="https://example.com/logo.png" class="w-full p-2.5 rounded-xl border border-slate-300 mb-2">
+            <input type="file" accept="image/*" @change="handleLogoUpload($event)" class="w-full p-2 text-xs rounded-xl border border-slate-200">
+          </div>
+
+          <!-- Alamat -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Alamat Lengkap Sekolah</label>
+            <input type="text" x-model="schoolSettings.alamat" placeholder="Jl. Pendidikan No. 123..." class="w-full p-2.5 rounded-xl border border-slate-300">
+          </div>
+
+          <!-- Kontak / WA -->
+          <div class="space-y-1">
+            <label class="block font-bold text-slate-700">Kontak Telepon / WA Center</label>
+            <input type="text" x-model="schoolSettings.telepon" placeholder="0812-3456-7890" class="w-full p-2.5 rounded-xl border border-slate-300">
+          </div>
+
+          <div class="md:col-span-2 pt-4 border-t border-slate-200 flex justify-end">
+            <button type="submit" class="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg transition flex items-center gap-2 text-sm">
+              <i class="fas fa-save"></i> Simpan Pengaturan Sekolah & Logo
+            </button>
+          </div>
+        </form>
+      </div>
+
     </div>
 
     <!-- ==========================================
@@ -518,57 +681,49 @@
             <thead>
               <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
                 <th class="p-3.5">Murid</th>
-                <th class="p-3.5">Kelompok & Guru</th>
-                <th class="p-3.5">Catatan Perkembangan</th>
-                <th class="p-3.5 text-center">Status</th>
-                <th class="p-3.5 text-center">Aksi Kepala Sekolah</th>
+                <th class="p-3.5">Kelompok</th>
+                <th class="p-3.5">Tahun / Semester</th>
+                <th class="p-3.5">Status Pengajuan</th>
+                <th class="p-3.5">Evaluasi Guru</th>
+                <th class="p-3.5 text-center">Aksi Kepsek</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
+            <tbody class="divide-y divide-slate-200 text-xs">
               <template x-for="r in kepsekReports" :key="r.idRaport">
                 <tr class="hover:bg-slate-50 transition">
                   <td class="p-3.5">
-                    <div class="font-bold text-slate-800" x-text="r.namaMurid"></div>
-                    <div class="text-[11px] text-slate-500" x-text="'NIS: ' + r.nis + ' (' + r.jenisKelamin + ')'"></div>
+                    <div class="font-bold text-slate-800 text-sm" x-text="r.namaMurid"></div>
+                    <div class="font-mono text-slate-500" x-text="'NIS: ' + r.nis"></div>
                   </td>
+                  <td class="p-3.5 font-semibold text-teal-700" x-text="r.idKelompok"></td>
+                  <td class="p-3.5" x-text="r.tahunAjaran + ' - ' + r.semester"></td>
                   <td class="p-3.5">
-                    <div class="font-bold text-teal-700" x-text="r.namaKelompok"></div>
-                    <div class="text-[11px] text-slate-500" x-text="'Wali: ' + r.waliKelas"></div>
-                  </td>
-                  <td class="p-3.5 max-w-xs">
-                    <p class="text-xs text-slate-600 italic line-clamp-2" x-text="'\"' + (r.catatanPerkembangan || 'Tidak ada catatan') + '\"'"></p>
-                    <div x-show="r.statusApproval === 'REVISI'" class="mt-1.5 p-2 bg-rose-50 rounded-xl border border-rose-200 text-rose-800 text-[11px]">
-                      <b>Catatan Revisi:</b> <span x-text="r.catatanRevisi"></span>
-                    </div>
-                  </td>
-                  <td class="p-3.5 text-center">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                    <span class="px-2.5 py-1 rounded-full font-bold"
                           :class="{
-                            'bg-sky-100 text-sky-800 border border-sky-300': r.statusApproval === 'DIAJUKAN',
-                            'bg-rose-100 text-rose-800 border border-rose-300': r.statusApproval === 'REVISI',
-                            'bg-emerald-100 text-emerald-800 border border-emerald-300': r.statusApproval === 'DISETUJUI'
-                          }">
-                      <i class="fas" :class="r.statusApproval === 'DIAJUKAN' ? 'fa-hourglass-half' : (r.statusApproval === 'REVISI' ? 'fa-exclamation-triangle' : 'fa-check-double')"></i>
-                      <span x-text="r.statusApproval === 'DIAJUKAN' ? 'Menunggu Review' : (r.statusApproval === 'REVISI' ? 'Perlu Revisi' : 'Disetujui (ACC)')"></span>
-                    </span>
+                            'bg-amber-100 text-amber-800': r.statusApproval === 'DIAJUKAN',
+                            'bg-rose-100 text-rose-800': r.statusApproval === 'REVISI',
+                            'bg-emerald-100 text-emerald-800': r.statusApproval === 'DISETUJUI'
+                          }"
+                          x-text="r.statusApproval"></span>
                   </td>
+                  <td class="p-3.5 max-w-xs truncate text-slate-600" x-text="r.catatanPerkembangan || '-'"></td>
                   <td class="p-3.5 text-center">
-                    <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                      <button @click="openPdfViewer(r.urlPdf, 'Raport - ' + r.namaMurid)" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1">
-                        <i class="fas fa-file-pdf text-rose-500"></i> Pratinjau
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button @click="openPdfViewer(r.urlPdf, 'Raport - ' + r.namaMurid)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fas fa-eye text-teal-600"></i> Pratinjau
                       </button>
-                      <button @click="approveReport(r.idRaport, r.namaMurid)" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-sm flex items-center gap-1">
-                        <i class="fas fa-check-circle"></i> ACC
+                      <button x-show="r.statusApproval !== 'DISETUJUI'" @click="approveReport(r.idRaport, r.namaMurid)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fas fa-check"></i> ACC
                       </button>
-                      <button @click="openRevisiModal(r)" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1">
-                        <i class="fas fa-edit"></i> Revisi
+                      <button x-show="r.statusApproval !== 'DISETUJUI'" @click="openRevisiModal(r)" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-bold flex items-center gap-1 border border-rose-200">
+                        <i class="fas fa-reply"></i> Revisi
                       </button>
                     </div>
                   </td>
                 </tr>
               </template>
               <tr x-show="kepsekReports.length === 0">
-                <td colspan="5" class="p-8 text-center text-slate-400">Tidak ada antrean raport saat ini.</td>
+                <td colspan="6" class="p-8 text-center text-slate-400">Tidak ada berkas raport pada antrean status ini.</td>
               </tr>
             </tbody>
           </table>
@@ -577,17 +732,17 @@
     </div>
 
     <!-- ==========================================
-         4. WALI KELAS (GURU) PORTAL VIEW
+         4. TEACHER / WALI KELAS PORTAL VIEW
          ========================================== -->
     <div x-show="currentUser?.role === 'WALI_KELAS' || currentUser?.role === 'GURU'" x-cloak class="space-y-6">
-      <div class="bg-gradient-to-r from-teal-700 to-emerald-700 rounded-3xl p-6 text-white shadow-xl">
+      <div class="bg-gradient-to-r from-teal-700 to-emerald-600 rounded-3xl p-6 text-white shadow-xl">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold backdrop-blur-sm mb-2">
-              <i class="fas fa-chalkboard-teacher text-amber-300"></i> Portal Wali Kelas
+              <i class="fas fa-chalkboard-teacher text-amber-300"></i> Portal Guru & Wali Kelas
             </div>
-            <h2 class="text-2xl font-black font-brand" x-text="teacherData.infoKelompok?.namaKelompok || 'Kelompok Belajar'">Kelompok Belajar</h2>
-            <p class="text-teal-100 text-xs mt-1">Unggah berkas raport PDF dan ajukan ke Kepala Sekolah untuk disahkan.</p>
+            <h2 class="text-2xl font-black font-brand" x-text="teacherData.infoKelompok?.namaKelompok || 'Kelas Bimbingan'"></h2>
+            <p class="text-teal-100 text-xs mt-1">Unggah berkas PDF dan isi narasi capaian perkembangan anak.</p>
           </div>
           <button @click="loadTeacherData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start">
             <i class="fas fa-sync-alt" :class="loading && 'fa-spin'"></i> Refresh
@@ -596,82 +751,53 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/20">
           <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
-            <p class="text-xs text-teal-200">Total Murid</p>
-            <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.totalMurid || 0">0</p>
+            <p class="text-xs text-teal-200">Total Murid di Kelas</p>
+            <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.totalSiswa || 0">0</p>
           </div>
           <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
-            <p class="text-xs text-teal-200">Menunggu Review</p>
-            <p class="text-2xl font-bold mt-1 text-sky-200" x-text="teacherData.stats?.totalDiajukan || 0">0</p>
-          </div>
-          <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
-            <p class="text-xs text-teal-200">Perlu Revisi</p>
-            <p class="text-2xl font-bold mt-1 text-rose-300" x-text="teacherData.stats?.totalRevisi || 0">0</p>
-          </div>
-          <div class="bg-white/10 rounded-2xl p-3.5 border border-white/10">
-            <p class="text-xs text-teal-200">Disetujui / Terbit</p>
-            <p class="text-2xl font-bold mt-1 text-emerald-300" x-text="teacherData.stats?.totalDisetujui || 0">0</p>
+            <p class="text-xs text-teal-200">Raport Diunggah</p>
+            <p class="text-2xl font-bold mt-1" x-text="teacherData.stats?.raportDiunggah || 0">0</p>
           </div>
         </div>
       </div>
 
-      <!-- Revision Banner if any -->
-      <div x-show="teacherData.stats?.totalRevisi > 0" class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-bold flex items-center gap-3">
-        <i class="fas fa-exclamation-circle text-rose-600 text-xl"></i>
-        <div>
-          Terdapat <span x-text="teacherData.stats?.totalRevisi"></span> berkas raport yang dikembalikan oleh Kepala Sekolah untuk diperbaiki. Silakan periksa catatan revisi dan unggah ulang berkas PDF.
-        </div>
-      </div>
-
-      <!-- Tabel Murid Kelompok -->
+      <!-- Daftar Siswa di Kelas -->
       <div class="glass-card rounded-2xl p-5 space-y-4">
-        <h3 class="font-bold text-base text-slate-800">Daftar Murid & Pengunggahan Raport</h3>
-
+        <h3 class="font-bold text-base text-slate-800">Daftar Murid di Rombel Anda</h3>
         <div class="overflow-x-auto rounded-xl border border-slate-200">
           <table class="w-full text-left border-collapse text-sm">
             <thead>
               <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
+                <th class="p-3.5">NIS</th>
                 <th class="p-3.5">Nama Murid</th>
-                <th class="p-3.5">Orang Tua / Kontak</th>
-                <th class="p-3.5 text-center">Status Raport</th>
-                <th class="p-3.5">Catatan / Evaluasi</th>
-                <th class="p-3.5 text-center">Aksi</th>
+                <th class="p-3.5">Status Raport</th>
+                <th class="p-3.5">Catatan Perkembangan</th>
+                <th class="p-3.5 text-center">Aksi Unggah / Edit</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
+            <tbody class="divide-y divide-slate-200 text-xs">
               <template x-for="m in teacherData.muridList" :key="m.nis">
-                <tr class="hover:bg-slate-50 transition" :class="m.statusRaport === 'REVISI' && 'bg-rose-50/40'">
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="p-3.5 font-mono font-bold text-slate-800" x-text="m.nis"></td>
+                  <td class="p-3.5 font-bold text-slate-800 text-sm" x-text="m.namaLengkap"></td>
                   <td class="p-3.5">
-                    <div class="font-bold text-slate-800" x-text="m.namaLengkap"></div>
-                    <div class="text-[11px] text-slate-500" x-text="'NIS: ' + m.nis + ' | Panggilan: ' + m.panggilan"></div>
-                  </td>
-                  <td class="p-3.5">
-                    <div class="text-xs text-slate-700" x-text="m.namaOrtu"></div>
-                    <div class="text-[11px] text-slate-500" x-text="'WA: ' + m.kontakOrtu"></div>
-                  </td>
-                  <td class="p-3.5 text-center">
-                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1"
+                    <span class="px-2.5 py-1 rounded-full font-bold"
                           :class="{
-                            'bg-slate-100 text-slate-600 border border-slate-200': m.statusRaport === 'BELUM_UPLOAD',
-                            'bg-sky-100 text-sky-800 border border-sky-300': m.statusRaport === 'DIAJUKAN',
-                            'bg-rose-100 text-rose-800 border border-rose-300 animate-pulse': m.statusRaport === 'REVISI',
-                            'bg-emerald-100 text-emerald-800 border border-emerald-300': m.statusRaport === 'DISETUJUI'
-                          }">
-                      <span x-text="m.statusRaport === 'BELUM_UPLOAD' ? 'Belum Diunggah' : (m.statusRaport === 'DIAJUKAN' ? 'Menunggu Kepsek' : (m.statusRaport === 'REVISI' ? 'Perlu Revisi' : 'Disetujui (ACC)'))"></span>
-                    </span>
+                            'bg-slate-100 text-slate-600': m.statusRaport === 'BELUM_UPLOAD',
+                            'bg-amber-100 text-amber-800': m.statusRaport === 'DIAJUKAN',
+                            'bg-rose-100 text-rose-800': m.statusRaport === 'REVISI',
+                            'bg-emerald-100 text-emerald-800': m.statusRaport === 'DISETUJUI'
+                          }"
+                          x-text="m.statusRaport"></span>
                   </td>
-                  <td class="p-3.5 max-w-xs">
-                    <div class="text-xs text-slate-600 italic" x-text="m.raportData?.catatanPerkembangan ? '\"' + m.raportData.catatanPerkembangan + '\"' : '- Belum ada berkas -'"></div>
-                    <div x-show="m.statusRaport === 'REVISI'" class="mt-1 p-2 bg-rose-50 rounded-lg border border-rose-200 text-rose-800 text-[11px]">
-                      <b>Catatan Revisi Kepsek:</b> <span x-text="m.raportData?.catatanRevisi"></span>
-                    </div>
-                  </td>
+                  <td class="p-3.5 max-w-xs truncate text-slate-600" x-text="m.raportData?.catatanPerkembangan || '-'"></td>
                   <td class="p-3.5 text-center">
-                    <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                      <button @click="openUploadModal(m)" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center gap-1">
-                        <i class="fas fa-cloud-upload-alt"></i> <span x-text="m.statusRaport === 'BELUM_UPLOAD' ? 'Unggah PDF' : 'Unggah Ulang'"></span>
+                    <div class="flex items-center justify-center gap-1.5">
+                      <button @click="openUploadModal(m)" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold flex items-center gap-1 shadow-sm">
+                        <i class="fas fa-cloud-upload-alt"></i> Upload Raport
                       </button>
-                      <button x-show="m.raportData?.urlPdf" @click="openPdfViewer(m.raportData?.urlPdf, 'Raport - ' + m.namaLengkap)" class="p-1.5 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">
-                        <i class="fas fa-file-pdf text-rose-500"></i>
+                      <button x-show="m.raportData?.urlPdf" @click="openPdfViewer(m.raportData.urlPdf, 'Raport - ' + m.namaLengkap)" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center gap-1">
+                        <i class="fas fa-eye text-teal-600"></i> Lihat PDF
                       </button>
                     </div>
                   </td>
@@ -684,75 +810,61 @@
     </div>
 
     <!-- ==========================================
-         5. WALI MURID (PARENT) PORTAL VIEW
+         5. PARENT / WALI MURID PORTAL VIEW
          ========================================== -->
-    <div x-show="currentUser?.role === 'ORTU'" x-cloak class="space-y-6">
-      <!-- Child Profile Header -->
-      <div class="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 rounded-3xl p-6 text-white shadow-xl">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/20">
-              🧒
-            </div>
-            <div>
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 text-[11px] font-bold mb-1">
-                <i class="fas fa-heart text-amber-300"></i> Portal Wali Murid
-              </div>
-              <h2 class="text-2xl font-black font-brand" x-text="'Ananda ' + (parentData.murid?.namaLengkap || currentUser?.namaMurid || 'Siswa')"></h2>
-              <p class="text-teal-100 text-xs mt-0.5" x-text="parentData.murid?.jenjang + ' - ' + parentData.murid?.namaKelompok"></p>
-            </div>
+    <div x-show="currentUser?.role === 'ORTU'" x-cloak class="space-y-6 max-w-3xl mx-auto">
+      <!-- Child Profile Card -->
+      <div class="bg-gradient-to-tr from-teal-700 via-emerald-600 to-teal-800 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div class="flex flex-col sm:flex-row items-center gap-5 relative z-10">
+          <div class="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-4xl shadow-md border-2 border-white/40">
+            👶
           </div>
-          <button @click="loadParentData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 self-start">
-            <i class="fas fa-sync-alt" :class="loading && 'fa-spin'"></i> Refresh
-          </button>
+          <div class="text-center sm:text-left space-y-1">
+            <span class="px-3 py-1 bg-amber-400 text-amber-950 font-extrabold rounded-full text-xs">
+              <span x-text="parentData.murid?.jenjang || 'TK'"></span> • <span x-text="parentData.murid?.idKelompok || '-'"></span>
+            </span>
+            <h2 class="text-2xl font-black font-brand" x-text="parentData.murid?.namaLengkap">Nama Ananda</h2>
+            <p class="text-teal-100 text-xs font-mono" x-text="'NIS: ' + (parentData.murid?.nis || '-')"></p>
+            <p class="text-teal-200 text-[11px]" x-text="'Orang Tua: ' + (parentData.murid?.namaAyah || '') + (parentData.murid?.namaIbu ? ' & ' + parentData.murid?.namaIbu : '')"></p>
+          </div>
         </div>
       </div>
 
-      <!-- Raport Digital List -->
+      <!-- Published Report List -->
       <div class="space-y-4">
-        <h3 class="font-bold text-lg text-slate-800">Berkas Raport Digital</h3>
-
-        <div x-show="parentData.raportList?.length === 0" class="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-          <div class="text-4xl">🌱</div>
-          <h4 class="font-bold text-slate-700 text-sm">Raport Belum Diterbitkan</h4>
-          <p class="text-xs text-slate-500">Berkas raport ananda saat ini masih dalam proses penyusunan/evaluasi oleh Kepala Sekolah dan akan segera diterbitkan.</p>
-        </div>
-
+        <h3 class="font-bold text-lg text-slate-800">Berkas Raport Perkembangan Ananda</h3>
         <template x-for="r in parentData.raportList" :key="r.idRaport">
-          <div class="glass-card rounded-2xl p-5 space-y-4 shadow-sm hover:shadow-md transition">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="glass-card rounded-3xl p-6 shadow-md border border-white space-y-4 hover:shadow-lg transition">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
               <div>
-                <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800" x-text="'Tahun Ajaran ' + r.tahunAjaran"></span>
-                <h4 class="font-extrabold text-slate-800 text-base mt-1" x-text="'Raport ' + r.semester"></h4>
+                <h4 class="font-extrabold text-slate-800 text-base" x-text="r.tahunAjaran + ' - ' + r.semester"></h4>
+                <p class="text-xs text-slate-500" x-text="'Guru: ' + (r.uploaderUser || '-')"></p>
               </div>
-              <div class="text-right">
-                <span class="text-[11px] text-emerald-700 font-bold flex items-center gap-1">
-                  <i class="fas fa-stamp text-emerald-600"></i> Disetujui Kepala Sekolah
-                </span>
-                <div class="text-[10px] text-slate-400" x-text="r.tanggalDisetujui"></div>
-              </div>
+              <span class="px-3 py-1 rounded-full text-xs font-bold self-start sm:self-auto"
+                    :class="r.statusApproval === 'DISETUJUI' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'"
+                    x-text="r.statusApproval === 'DISETUJUI' ? '✅ Sudah Terbit Resmi' : '⏳ Dalam Peninjauan'"></span>
             </div>
 
-            <div x-show="r.catatanPerkembangan" class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1">
-              <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                <i class="fas fa-quote-left text-teal-600"></i> Catatan Perkembangan Ananda:
-              </div>
-              <p class="italic leading-relaxed" x-text="'\"' + r.catatanPerkembangan + '\"'"></p>
+            <!-- Catatan Guru -->
+            <div class="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-1">
+              <div class="text-[11px] font-bold text-teal-700"><i class="fas fa-comment-dots mr-1"></i> Catatan Capaian Ananda:</div>
+              <p class="text-xs text-slate-700 italic leading-relaxed" x-text="r.catatanPerkembangan || 'Catatan perkembangan belum diisi.'"></p>
             </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+            <!-- Action Button: Open PDF Viewer -->
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
               <div class="flex items-center gap-2">
-                <button @click="openPdfViewer(r.urlPdf, 'Raport - ' + (parentData.murid?.namaLengkap || 'Murid'))" class="px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
-                  <i class="fas fa-book-reader"></i> Buka Raport Digital
+                <button @click="openPdfViewer(r.urlPdf, 'Raport Digital - ' + parentData.murid?.namaLengkap)" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
+                  <i class="fas fa-file-pdf"></i> Baca Raport Digital
                 </button>
-                <a :href="r.urlPdf" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center gap-1.5">
-                  <i class="fas fa-download text-teal-600"></i> Unduh PDF
+                <a :href="r.urlPdf" target="_blank" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+                  <i class="fas fa-download"></i> Unduh PDF
                 </a>
               </div>
 
               <div>
                 <div x-show="r.sudahDilihat" class="inline-flex items-center gap-1.5 text-xs text-emerald-700 font-bold bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                  <i class="fas fa-check-circle"></i> Telah dikonfirmasi: <span x-text="r.namaWaliKonfirmasi || 'Wali Murid'"></span> (<span x-text="r.tanggalDilihat"></span>)
+                  <i class="fas fa-check-circle"></i> Telah Dikonfirmasi: <span x-text="r.namaWaliKonfirmasi || 'Wali Murid'"></span> (<span x-text="r.tanggalDilihat"></span>)
                 </div>
                 <button x-show="!r.sudahDilihat" @click="confirmReceipt(r.idRaport)" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5">
                   <i class="fas fa-check"></i> Konfirmasi Tanda Terima Raport
@@ -770,43 +882,66 @@
        MODALS
        ========================================== -->
   
-  <!-- MODAL: ADD / EDIT MURID -->
+  <!-- MODAL 1: ADD / EDIT MURID & AKUN WALI MURID -->
   <div x-show="modalStudent.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 my-8 max-h-[90vh] overflow-y-auto" @click.outside="modalStudent.show = false">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 class="font-bold text-slate-800 text-base" x-text="modalStudent.isEdit ? 'Edit Data Murid' : 'Tambah Data Murid Baru'"></h3>
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" x-text="modalStudent.isEdit ? 'Edit Data Murid & Akun Ortu' : 'Tambah Data Murid Baru'"></h3>
+          <p class="text-xs text-slate-500">Kelola identitas anak dan hak akses akun orang tua.</p>
+        </div>
         <button @click="modalStudent.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
       </div>
       <form @submit.prevent="saveStudentSubmit()" class="space-y-4 text-xs">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">NIS *</label>
-            <input type="text" x-model="modalStudent.data.nis" :readonly="modalStudent.isEdit" required class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500">
+            <label class="block font-bold text-slate-700 mb-1">Nomor Induk Siswa (NIS) *</label>
+            <input type="text" x-model="modalStudent.data.nis" :readonly="modalStudent.isEdit" required placeholder="Contoh: 202601" class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 font-mono">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Nama Lengkap *</label>
-            <input type="text" x-model="modalStudent.data.namaLengkap" required class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500">
+            <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Murid *</label>
+            <input type="text" x-model="modalStudent.data.namaLengkap" required placeholder="Nama lengkap ananda" class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500">
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Nama Panggilan</label>
-            <input type="text" x-model="modalStudent.data.namaPanggilan" class="w-full p-2.5 rounded-xl border border-slate-200">
+            <input type="text" x-model="modalStudent.data.namaPanggilan" placeholder="Panggilan akrab" class="w-full p-2.5 rounded-xl border border-slate-200">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Jenjang</label>
-            <select x-model="modalStudent.data.jenjang" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white">
-              <option value="Playgroup (PG)">Playgroup (PG)</option>
-              <option value="TK-A">TK-A</option>
-              <option value="TK-B">TK-B</option>
+            <label class="block font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+            <select x-model="modalStudent.data.jenisKelamin" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-semibold">
+              <option value="L">Laki-Laki (L)</option>
+              <option value="P">Perempuan (P)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Jenjang Pendidikan *</label>
+            <select x-model="modalStudent.data.jenjang" required class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold text-teal-700">
+              <option value="PG A">PG A</option>
+              <option value="PG B">PG B</option>
+              <option value="TK A">TK A</option>
+              <option value="TK B">TK B</option>
               <option value="Daycare">Daycare</option>
             </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Kelompok Belajar</label>
-            <input type="text" x-model="modalStudent.data.idKelompok" class="w-full p-2.5 rounded-xl border border-slate-200">
+            <label class="block font-bold text-slate-700 mb-1">Kelompok Belajar (Rombel)</label>
+            <select x-model="modalStudent.data.idKelompok" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-semibold">
+              <template x-for="c in adminData.classes" :key="c.idKelompok">
+                <option :value="c.idKelompok" x-text="c.namaKelompok + ' (' + c.jenjang + ')'"></option>
+              </template>
+            </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">PIN Akses (Wali Murid)</label>
-            <input type="text" x-model="modalStudent.data.pin" placeholder="Contoh: 150321" class="w-full p-2.5 rounded-xl border border-slate-200">
+            <label class="block font-bold text-slate-700 mb-1">PIN Akses Wali Murid (Kata Sandi) *</label>
+            <input type="text" x-model="modalStudent.data.pin" placeholder="Contoh: 1234" required class="w-full p-2.5 rounded-xl border border-slate-200 font-mono font-bold text-teal-700">
+            <p class="text-[10px] text-slate-400 mt-1">Digunakan wali murid saat login bersama NIS.</p>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Status Keaktifan</label>
+            <select x-model="modalStudent.data.status" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+              <option value="AKTIF">AKTIF</option>
+              <option value="NONAKTIF">NONAKTIF</option>
+            </select>
           </div>
           <div>
             <label class="block font-bold text-slate-700 mb-1">Nama Orang Tua (Ayah / Ibu)</label>
@@ -814,24 +949,222 @@
             <input type="text" x-model="modalStudent.data.namaIbu" placeholder="Nama Ibu" class="w-full p-2.5 rounded-xl border border-slate-200">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Kontak WA Ortu</label>
-            <input type="text" x-model="modalStudent.data.kontakOrtu" placeholder="0812..." class="w-full p-2.5 rounded-xl border border-slate-200 mb-2">
-            <label class="block font-bold text-slate-700 mb-1">Status</label>
-            <select x-model="modalStudent.data.status" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white">
-              <option value="AKTIF">AKTIF</option>
-              <option value="NONAKTIF">NONAKTIF</option>
-            </select>
+            <label class="block font-bold text-slate-700 mb-1">No. Kontak WA Orang Tua</label>
+            <input type="text" x-model="modalStudent.data.kontakOrtu" placeholder="081234567890" class="w-full p-2.5 rounded-xl border border-slate-200 mb-2">
+            <label class="block font-bold text-slate-700 mb-1">Alamat Rumah</label>
+            <input type="text" x-model="modalStudent.data.alamat" placeholder="Alamat tinggal ananda" class="w-full p-2.5 rounded-xl border border-slate-200">
           </div>
         </div>
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
           <button type="button" @click="modalStudent.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
-          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md">Simpan Data</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md">Simpan Data Murid</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODAL: UPLOAD RAPORT PDF (GURU) -->
+  <!-- MODAL 2: ADD / EDIT GURU & MANAGEMENT USERNAME -->
+  <div x-show="modalTeacher.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8" @click.outside="modalTeacher.show = false">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" x-text="modalTeacher.isEdit ? 'Edit Akun Guru & Staff' : 'Tambah Akun Guru Baru'"></h3>
+          <p class="text-xs text-slate-500">Kelola akun login dan penugasan wali kelas.</p>
+        </div>
+        <button @click="modalTeacher.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="saveTeacherSubmit()" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
+          <input type="text" x-model="modalTeacher.data.namaLengkap" required placeholder="Contoh: Bunda Fatimah Az-Zahra, S.Pd." class="w-full p-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Username Login *</label>
+            <input type="text" x-model="modalTeacher.data.username" required placeholder="Contoh: guru.tkb" class="w-full p-2.5 rounded-xl border border-slate-200 font-mono">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Peran (Role) *</label>
+            <select x-model="modalTeacher.data.role" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+              <option value="WALI_KELAS">Wali Kelas / Guru</option>
+              <option value="KEPSEK">Kepala Sekolah</option>
+              <option value="ADMIN">Administrator</option>
+            </select>
+          </div>
+        </div>
+        <div x-show="!modalTeacher.isEdit">
+          <label class="block font-bold text-slate-700 mb-1">Kata Sandi Awal *</label>
+          <input type="text" x-model="modalTeacher.data.password" placeholder="Contoh: guru123" class="w-full p-2.5 rounded-xl border border-slate-200 font-mono">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kelompok yang Diampu (1 Rombel)</label>
+            <select x-model="modalTeacher.data.kelompokDiampu" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-semibold">
+              <option value="SEMUA">SEMUA</option>
+              <template x-for="c in adminData.classes" :key="c.idKelompok">
+                <option :value="c.idKelompok" x-text="c.namaKelompok"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">No. WhatsApp</label>
+            <input type="text" x-model="modalTeacher.data.kontakWa" placeholder="081234567890" class="w-full p-2.5 rounded-xl border border-slate-200">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Status Akun</label>
+          <select x-model="modalTeacher.data.status" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+            <option value="AKTIF">AKTIF</option>
+            <option value="NONAKTIF">NONAKTIF</option>
+          </select>
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" @click="modalTeacher.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md">Simpan Akun Guru</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: RESET PASSWORD AKUN GURU -->
+  <div x-show="modalResetPass.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4" @click.outside="modalResetPass.show = false">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold"><i class="fas fa-key"></i></div>
+          <h3 class="font-bold text-slate-800 text-base">Reset Password Guru</h3>
+        </div>
+        <button @click="modalResetPass.show = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="submitResetPasswordGuru()" class="space-y-4 text-xs">
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+          <div class="font-bold text-slate-800" x-text="modalResetPass.namaLengkap"></div>
+          <div class="font-mono text-slate-500" x-text="'Username: ' + modalResetPass.username"></div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Kata Sandi Baru *</label>
+          <input type="text" x-model="modalResetPass.newPassword" required placeholder="Masukkan kata sandi baru..." class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-sm focus:ring-2 focus:ring-amber-500">
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" @click="modalResetPass.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-md">Simpan Password Baru</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: ADD / EDIT KELOMPOK (ROMBEL) -->
+  <div x-show="modalClass.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 my-8" @click.outside="modalClass.show = false">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" x-text="modalClass.isEdit ? 'Edit Kelompok Belajar' : 'Tambah Kelompok Belajar Baru'"></h3>
+          <p class="text-xs text-slate-500">Atur kelompok belajar dan tetapkan wali kelasnya.</p>
+        </div>
+        <button @click="modalClass.show = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="saveClassSubmit()" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">ID Kelompok *</label>
+          <input type="text" x-model="modalClass.data.idKelompok" :readonly="modalClass.isEdit" required placeholder="Contoh: PGA-1, TKA-1" class="w-full p-2.5 rounded-xl border border-slate-200 font-mono font-bold">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama Kelompok *</label>
+          <input type="text" x-model="modalClass.data.namaKelompok" required placeholder="Contoh: Kelas Bintang (PG A)" class="w-full p-2.5 rounded-xl border border-slate-200">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Jenjang *</label>
+            <select x-model="modalClass.data.jenjang" required class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+              <option value="PG A">PG A</option>
+              <option value="PG B">PG B</option>
+              <option value="TK A">TK A</option>
+              <option value="TK B">TK B</option>
+              <option value="Daycare">Daycare</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kapasitas Maksimal</label>
+            <input type="number" x-model="modalClass.data.kapasitas" min="1" max="50" class="w-full p-2.5 rounded-xl border border-slate-200">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Wali Kelas yang Ditugaskan</label>
+          <select x-model="modalClass.data.idWaliKelas" @change="onClassTeacherChange($event)" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-semibold">
+            <option value="">-- Belum Ditugaskan --</option>
+            <template x-for="t in adminData.teachers.filter(x => x.role === 'WALI_KELAS' || x.role === 'GURU')" :key="t.userId">
+              <option :value="t.userId" x-text="t.namaLengkap + ' (' + t.username + ')'"></option>
+            </template>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Status Kelompok</label>
+          <select x-model="modalClass.data.status" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+            <option value="AKTIF">AKTIF</option>
+            <option value="NONAKTIF">NONAKTIF</option>
+          </select>
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" @click="modalClass.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md">Simpan Kelompok</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: ADD / EDIT TAHUN PELAJARAN (TAPEL) -->
+  <div x-show="modalYear.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.outside="modalYear.show = false">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base" x-text="modalYear.isEdit ? 'Edit Tahun Pelajaran' : 'Tambah Tahun Pelajaran Baru'"></h3>
+          <p class="text-xs text-slate-500">Atur periode aktif dan status akses raport ortu.</p>
+        </div>
+        <button @click="modalYear.show = false" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i class="fas fa-times"></i></button>
+      </div>
+      <form @submit.prevent="saveYearSubmit()" class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">ID Periode *</label>
+          <input type="text" x-model="modalYear.data.idTahun" :readonly="modalYear.isEdit" required placeholder="Contoh: TA-2025-GANJIL" class="w-full p-2.5 rounded-xl border border-slate-200 font-mono font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Tahun Pelajaran *</label>
+            <input type="text" x-model="modalYear.data.namaTahun" required placeholder="Contoh: 2025/2026" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Semester *</label>
+            <select x-model="modalYear.data.semester" required class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-semibold">
+              <option value="Ganjil (Semester 1)">Ganjil (Semester 1)</option>
+              <option value="Genap (Semester 2)">Genap (Semester 2)</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Status Periode</label>
+            <select x-model="modalYear.data.statusAktif" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+              <option value="AKTIF">AKTIF (Berjalan)</option>
+              <option value="NONAKTIF">NONAKTIF</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Akses Raport Ortu</label>
+            <select x-model="modalYear.data.statusAksesOrtu" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold">
+              <option value="DIBUKA">DIBUKA</option>
+              <option value="DITUTUP">DITUTUP</option>
+            </select>
+          </div>
+        </div>
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" @click="modalYear.show = false" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold shadow-md">Simpan Periode</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 6: UPLOAD RAPORT PDF (GURU) -->
   <div x-show="modalUpload.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 my-8" @click.outside="modalUpload.show = false">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -843,9 +1176,9 @@
       </div>
       <form @submit.prevent="submitUploadReport()" class="space-y-4 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Pilih File Raport PDF *</label>
+          <label class="block font-bold text-slate-700 mb-1">Pilih File Raport PDF Asli *</label>
           <input type="file" accept="application/pdf" @change="handleFileSelect($event)" required class="w-full p-2.5 rounded-xl border border-slate-200">
-          <p class="text-[10px] text-slate-400 mt-1">Format file harus .pdf (Maksimal 15 MB).</p>
+          <p class="text-[10px] text-slate-400 mt-1">File PDF asli akan langsung tersimpan dan dapat dipratinjau.</p>
         </div>
         <div>
           <label class="block font-bold text-slate-700 mb-1">Catatan Evaluasi / Narasi Perkembangan</label>
@@ -866,7 +1199,7 @@
     </div>
   </div>
 
-  <!-- MODAL: REVISI KEPSEK -->
+  <!-- MODAL 7: REVISI KEPSEK -->
   <div x-show="modalRevisi.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4" @click.outside="modalRevisi.show = false">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -889,7 +1222,7 @@
     </div>
   </div>
 
-  <!-- MODAL: PDF VIEWER -->
+  <!-- MODAL 8: PDF VIEWER MODAL -->
   <div x-show="modalPdf.show" x-cloak class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white rounded-3xl max-w-4xl w-full h-[90vh] shadow-2xl flex flex-col overflow-hidden">
       <!-- Modal Header -->
@@ -900,7 +1233,7 @@
           </div>
           <div>
             <h3 class="font-bold text-slate-800 text-sm sm:text-base leading-tight" x-text="modalPdf.title">Pratinjau Raport Digital</h3>
-            <p class="text-[11px] text-slate-500">PAUD Terpadu Anak Saleh</p>
+            <p class="text-[11px] text-slate-500" x-text="schoolSettings.name">PAUD Terpadu Anak Saleh</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
@@ -951,7 +1284,7 @@
 
   <!-- FOOTER -->
   <footer class="mt-auto border-t border-slate-200/80 py-4 text-center text-xs text-slate-500 bg-white/50 backdrop-blur-sm">
-    <p>© 2026 <b>PG - TK - DAYCARE ANAK SALEH</b>. Sistem Informasi Raport Digital.</p>
+    <p>© 2026 <b x-text="schoolSettings.name">PG - TK - DAYCARE ANAK SALEH</b>. Sistem Informasi Raport Digital.</p>
   </footer>
 
   <!-- ==========================================
@@ -965,6 +1298,17 @@
         loginRole: 'ORTU',
         loginForm: { identifier: '', secret: '' },
         loading: false,
+
+        // School Settings / Branding
+        schoolSettings: {
+          name: 'PG - TK - DAYCARE ANAK SALEH',
+          tagline: 'Portal Raport & Perkembangan Anak Usia Dini',
+          logoType: 'emoji',
+          logoEmoji: '🌱',
+          logoImg: '',
+          alamat: 'Jl. Pendidikan No. 45, Kebayoran Baru, Jakarta Selatan',
+          telepon: '0812-3456-7890'
+        },
 
         // Admin State
         adminTab: 'siswa',
@@ -986,10 +1330,12 @@
         // Modals
         modalStudent: { show: false, isEdit: false, data: {} },
         modalTeacher: { show: false, isEdit: false, data: {} },
+        modalResetPass: { show: false, userId: '', username: '', namaLengkap: '', newPassword: '' },
         modalClass: { show: false, isEdit: false, data: {} },
+        modalYear: { show: false, isEdit: false, data: {} },
         modalUpload: { show: false, nis: '', muridName: '', idKelompok: '', catatan: '', directSubmit: true, fileBase64: '', fileName: '' },
         modalRevisi: { show: false, idRaport: '', muridName: '', notes: '' },
-        modalPdf: { show: false, url: '', title: '' },
+        modalPdf: { show: false, url: '', rawUrl: '', title: '' },
 
         // Toast
         toast: { show: false, message: '', type: 'info' },
@@ -998,6 +1344,11 @@
         clientDb: null,
 
         initLocalDb() {
+          const savedSchool = localStorage.getItem('ANAK_SALEH_SCHOOL_SETTINGS');
+          if (savedSchool) {
+            try { this.schoolSettings = JSON.parse(savedSchool); } catch(e) {}
+          }
+
           const saved = localStorage.getItem('ANAK_SALEH_LOCAL_DB');
           if (saved) {
             try { this.clientDb = JSON.parse(saved); return; } catch(e) {}
@@ -1006,35 +1357,39 @@
             users: [
               { userId: "USR-ADM-01", username: "admin", password: "admin123", namaLengkap: "Administrator Portal", role: "ADMIN", kelompokDiampu: "SEMUA", kontakWa: "081234567890", status: "AKTIF" },
               { userId: "USR-KPS-01", username: "kepsek", password: "kepsek123", namaLengkap: "Hj. Siti Aminah, M.Pd.", role: "KEPSEK", kelompokDiampu: "SEMUA", kontakWa: "081234567891", status: "AKTIF" },
-              { userId: "USR-GUR-01", username: "guru.tka", password: "guru123", namaLengkap: "Bunda Nurul Hidayah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TK-A1", kontakWa: "081234567892", status: "AKTIF" },
-              { userId: "USR-GUR-02", username: "guru.tkb", password: "guru123", namaLengkap: "Bunda Fatimah Az-Zahra, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TK-B1", kontakWa: "081234567893", status: "AKTIF" },
-              { userId: "USR-GUR-03", username: "guru.pg", password: "guru123", namaLengkap: "Bunda Aisyah Humaira, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "KB-A", kontakWa: "081234567894", status: "AKTIF" },
-              { userId: "USR-GUR-04", username: "guru.daycare", password: "guru123", namaLengkap: "Bunda Maryam Shalihah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "DC-1", kontakWa: "081234567895", status: "AKTIF" }
+              { userId: "USR-GUR-01", username: "guru.tka", password: "guru123", namaLengkap: "Bunda Nurul Hidayah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TKA-1", kontakWa: "081234567892", status: "AKTIF" },
+              { userId: "USR-GUR-02", username: "guru.tkb", password: "guru123", namaLengkap: "Bunda Fatimah Az-Zahra, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TKB-1", kontakWa: "081234567893", status: "AKTIF" },
+              { userId: "USR-GUR-03", username: "guru.pga", password: "guru123", namaLengkap: "Bunda Aisyah Humaira, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "PGA-1", kontakWa: "081234567894", status: "AKTIF" },
+              { userId: "USR-GUR-04", username: "guru.pgb", password: "guru123", namaLengkap: "Bunda Khadijah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "PGB-1", kontakWa: "081234567895", status: "AKTIF" },
+              { userId: "USR-GUR-05", username: "guru.daycare", password: "guru123", namaLengkap: "Bunda Maryam Shalihah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "DC-1", kontakWa: "081234567896", status: "AKTIF" }
             ],
             murid: [
-              { nis: "202601", namaLengkap: "Muhammad Al-Fatih Pratama", namaPanggilan: "Fatih", jenisKelamin: "L", jenjang: "Playgroup (PG)", idKelompok: "KB-A", tempatLahir: "Jakarta", tanggalLahir: "2022-03-15", namaAyah: "Hendra Pratama", namaIbu: "Rina Kartika", kontakOrtu: "081122334455", status: "AKTIF", alamat: "Jl. Melati No. 12, Kebayoran", pin: "1234" },
-              { nis: "202603", namaLengkap: "Ahmad Zaidan Robbani", namaPanggilan: "Zaidan", jenisKelamin: "L", jenjang: "TK-A", idKelompok: "TK-A1", tempatLahir: "Jakarta", tanggalLahir: "2021-05-20", namaAyah: "Rudi Hartono", namaIbu: "Siti Nurhaliza", kontakOrtu: "081122334456", status: "AKTIF", alamat: "Jl. Mawar Indah Blok B4", pin: "1234" },
-              { nis: "202605", namaLengkap: "Ibrahim Rayyan Malik", namaPanggilan: "Rayyan", jenisKelamin: "L", jenjang: "TK-B", idKelompok: "TK-B1", tempatLahir: "Depok", tanggalLahir: "2020-08-10", namaAyah: "Dedi Setiadi", namaIbu: "Ratna Sari", kontakOrtu: "081122334457", status: "AKTIF", alamat: "Jl. Anggrek Raya No. 45", pin: "1234" },
+              { nis: "202601", namaLengkap: "Muhammad Al-Fatih Pratama", namaPanggilan: "Fatih", jenisKelamin: "L", jenjang: "PG A", idKelompok: "PGA-1", tempatLahir: "Jakarta", tanggalLahir: "2022-03-15", namaAyah: "Hendra Pratama", namaIbu: "Rina Kartika", kontakOrtu: "081122334455", status: "AKTIF", alamat: "Jl. Melati No. 12", pin: "1234" },
+              { nis: "202602", namaLengkap: "Aisyah Zahira Putri", namaPanggilan: "Zahira", jenisKelamin: "P", jenjang: "PG B", idKelompok: "PGB-1", tempatLahir: "Jakarta", tanggalLahir: "2021-11-20", namaAyah: "Rudi Hartono", namaIbu: "Siti Nurhaliza", kontakOrtu: "081122334456", status: "AKTIF", alamat: "Jl. Mawar Blok B4", pin: "1234" },
+              { nis: "202603", namaLengkap: "Ahmad Zaidan Robbani", namaPanggilan: "Zaidan", jenisKelamin: "L", jenjang: "TK A", idKelompok: "TKA-1", tempatLahir: "Jakarta", tanggalLahir: "2021-05-20", namaAyah: "Rudi Hartono", namaIbu: "Siti Nurhaliza", kontakOrtu: "081122334456", status: "AKTIF", alamat: "Jl. Mawar Indah Blok B4", pin: "1234" },
+              { nis: "202605", namaLengkap: "Ibrahim Rayyan Malik", namaPanggilan: "Rayyan", jenisKelamin: "L", jenjang: "TK B", idKelompok: "TKB-1", tempatLahir: "Depok", tanggalLahir: "2020-08-10", namaAyah: "Dedi Setiadi", namaIbu: "Ratna Sari", kontakOrtu: "081122334457", status: "AKTIF", alamat: "Jl. Anggrek Raya No. 45", pin: "1234" },
               { nis: "202607", namaLengkap: "Bilal Arkananta Wijaya", namaPanggilan: "Bilal", jenisKelamin: "L", jenjang: "Daycare", idKelompok: "DC-1", tempatLahir: "Jakarta", tanggalLahir: "2023-01-08", namaAyah: "Agus Santoso", namaIbu: "Laila Majnun", kontakOrtu: "081122334460", status: "AKTIF", alamat: "Jl. Flamboyan No. 18", pin: "1234" }
             ],
             kelompok: [
-              { idKelompok: "KB-A", namaKelompok: "Kelas Al-Kautsar (Playgroup)", jenjang: "Playgroup (PG)", idWaliKelas: "USR-GUR-03", namaWaliKelas: "Bunda Aisyah Humaira, S.Pd.", kapasitas: 15, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
-              { idKelompok: "TK-A1", namaKelompok: "Kelas Ar-Rahman (TK-A)", jenjang: "TK-A", idWaliKelas: "USR-GUR-01", namaWaliKelas: "Bunda Nurul Hidayah, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
-              { idKelompok: "TK-B1", namaKelompok: "Kelas Al-Ikhlas (TK-B)", jenjang: "TK-B", idWaliKelas: "USR-GUR-02", namaWaliKelas: "Bunda Fatimah Az-Zahra, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
-              { idKelompok: "DC-1", namaKelompok: "Bintang Cilik (Daycare)", jenjang: "Daycare", idWaliKelas: "USR-GUR-04", namaWaliKelas: "Bunda Maryam Shalihah, S.Pd.", kapasitas: 10, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 }
+              { idKelompok: "PGA-1", namaKelompok: "Kelas Bintang (PG A)", jenjang: "PG A", idWaliKelas: "USR-GUR-03", namaWaliKelas: "Bunda Aisyah Humaira, S.Pd.", kapasitas: 15, tahunAjaran: "2025/2026", status: "AKTIF" },
+              { idKelompok: "PGB-1", namaKelompok: "Kelas Bulan (PG B)", jenjang: "PG B", idWaliKelas: "USR-GUR-04", namaWaliKelas: "Bunda Khadijah, S.Pd.", kapasitas: 15, tahunAjaran: "2025/2026", status: "AKTIF" },
+              { idKelompok: "TKA-1", namaKelompok: "Kelas Ar-Rahman (TK A)", jenjang: "TK A", idWaliKelas: "USR-GUR-01", namaWaliKelas: "Bunda Nurul Hidayah, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF" },
+              { idKelompok: "TKB-1", namaKelompok: "Kelas Al-Ikhlas (TK B)", jenjang: "TK B", idWaliKelas: "USR-GUR-02", namaWaliKelas: "Bunda Fatimah Az-Zahra, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF" },
+              { idKelompok: "DC-1", namaKelompok: "Bintang Cilik (Daycare)", jenjang: "Daycare", idWaliKelas: "USR-GUR-05", namaWaliKelas: "Bunda Maryam Shalihah, S.Pd.", kapasitas: 10, tahunAjaran: "2025/2026", status: "AKTIF" }
             ],
             tahun_ajaran: [
               { idTahun: "TA-2025-GANJIL", namaTahun: "2025/2026", semester: "Ganjil (Semester 1)", statusAktif: "AKTIF", statusAksesOrtu: "DIBUKA" },
-              { idTahun: "TA-2025-GENAP", namaTahun: "2025/2026", semester: "Genap (Semester 2)", statusAktif: "NONAKTIF", statusAksesOrtu: "DITUTUP" }
+              { idTahun: "TA-2025-GENAP", namaTahun: "2025/2026", semester: "Genap (Semester 2)", statusAktif: "NONAKTIF", statusAksesOrtu: "DITUTUP" },
+              { idTahun: "TA-2026-GANJIL", namaTahun: "2026/2027", semester: "Ganjil (Semester 1)", statusAktif: "NONAKTIF", statusAksesOrtu: "DITUTUP" }
             ],
             raport: [
               {
                 idRaport: "RAP-202603-01",
                 nis: "202603",
-                idKelompok: "TK-A1",
+                idKelompok: "TKA-1",
                 tahunAjaran: "2025/2026",
                 semester: "Ganjil (Semester 1)",
-                urlPdf: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                urlPdf: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs/preview",
                 fileId: "demo_pdf_01",
                 catatanPerkembangan: "Ananda Zaidan sangat aktif dalam kegiatan motorik kasar dan mandiri saat berwudhu.",
                 statusApproval: "DISETUJUI",
@@ -1049,10 +1404,10 @@
               {
                 idRaport: "RAP-202601-01",
                 nis: "202601",
-                idKelompok: "KB-A",
+                idKelompok: "PGA-1",
                 tahunAjaran: "2025/2026",
                 semester: "Ganjil (Semester 1)",
-                urlPdf: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                urlPdf: "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs/preview",
                 fileId: "demo_pdf_02",
                 catatanPerkembangan: "Ananda Fatih sangat ceria dan antusias dalam mendengarkan kisah nabi.",
                 statusApproval: "DIAJUKAN",
@@ -1066,7 +1421,7 @@
               }
             ],
             logs: [
-              { timestamp: "17/09/2026 19:20:00", user: "SYSTEM", role: "SETUP", aktivitas: "Sistem Siap", detail: "Database Raport Digital Berhasil Dimuat" }
+              { timestamp: "17/09/2026 20:00:00", user: "SYSTEM", role: "SETUP", aktivitas: "Sistem Siap", detail: "Database Raport Digital & Modul Administrator Berhasil Dimuat" }
             ]
           };
           localStorage.setItem('ANAK_SALEH_LOCAL_DB', JSON.stringify(this.clientDb));
@@ -1078,10 +1433,16 @@
           }
         },
 
+        getStudentsInClass(idKelompok) {
+          if (!this.clientDb || !this.clientDb.murid) return [];
+          return this.clientDb.murid.filter(m => m.idKelompok === idKelompok);
+        },
+
         executeLocalMock(endpoint, method, body) {
           if (!this.clientDb) this.initLocalDb();
           const cleanEp = endpoint.split('?')[0];
 
+          // 1. AUTH LOGIN
           if (cleanEp.includes('/auth/login')) {
             const role = body.role;
             const ident = (body.identifier || '').trim().toLowerCase();
@@ -1102,6 +1463,7 @@
             }
           }
 
+          // 2. ADMIN ALL DATA
           if (cleanEp.includes('/admin/all-data')) {
             const activeY = this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF') || this.clientDb.tahun_ajaran[0];
             return {
@@ -1109,16 +1471,17 @@
               data: {
                 summary: {
                   totalMurid: this.clientDb.murid.length,
-                  totalGuru: this.clientDb.users.filter(x => x.role === 'WALI_KELAS').length,
+                  totalGuru: this.clientDb.users.filter(x => x.role === 'WALI_KELAS' || x.role === 'GURU').length,
                   totalKelompok: this.clientDb.kelompok.length,
                   tahunAjaranAktif: activeY?.namaTahun || '2025/2026',
                   semesterAktif: activeY?.semester || 'Ganjil',
                   statusAksesOrtu: activeY?.statusAksesOrtu || 'DIBUKA',
                   activeTA: activeY || { namaTahun: '2025/2026', semester: 'Ganjil', statusAksesOrtu: 'DIBUKA' },
                   perJenjang: {
-                    'Playgroup (PG)': this.clientDb.murid.filter(m => m.jenjang && m.jenjang.includes('PG')).length,
-                    'TK-A': this.clientDb.murid.filter(m => m.jenjang === 'TK-A').length,
-                    'TK-B': this.clientDb.murid.filter(m => m.jenjang === 'TK-B').length,
+                    'PG A': this.clientDb.murid.filter(m => m.jenjang === 'PG A').length,
+                    'PG B': this.clientDb.murid.filter(m => m.jenjang === 'PG B').length,
+                    'TK A': this.clientDb.murid.filter(m => m.jenjang === 'TK A').length,
+                    'TK B': this.clientDb.murid.filter(m => m.jenjang === 'TK B').length,
                     'Daycare': this.clientDb.murid.filter(m => m.jenjang === 'Daycare').length
                   },
                   raportStats: {
@@ -1137,20 +1500,91 @@
             };
           }
 
+          // 3. ADMIN STUDENT CRUD
           if (cleanEp.includes('/admin/students') && method === 'POST') {
             const s = body;
             const idx = this.clientDb.murid.findIndex(m => m.nis === s.nis);
             if (idx >= 0) this.clientDb.murid[idx] = { ...this.clientDb.murid[idx], ...s };
             else this.clientDb.murid.push(s);
             this.saveClientDb();
-            return { success: true, message: 'Data murid berhasil disimpan.' };
+            return { success: true, message: 'Data murid & akun ortu berhasil disimpan.' };
           }
 
           if (cleanEp.includes('/admin/students') && method === 'DELETE') {
             const nis = endpoint.split('/').pop();
             this.clientDb.murid = this.clientDb.murid.filter(m => m.nis !== nis);
             this.saveClientDb();
-            return { success: true, message: 'Data murid dihapus.' };
+            return { success: true, message: 'Data murid berhasil dihapus.' };
+          }
+
+          // 4. ADMIN TEACHER CRUD & RESET PASSWORD
+          if (cleanEp.includes('/admin/teachers') && method === 'POST') {
+            const t = body;
+            const idx = this.clientDb.users.findIndex(u => u.userId === t.userId || u.username.toLowerCase() === t.username.toLowerCase());
+            if (idx >= 0) {
+              this.clientDb.users[idx] = { ...this.clientDb.users[idx], ...t };
+            } else {
+              t.userId = 'USR-GUR-' + (this.clientDb.users.length + 1).toString().padStart(2, '0');
+              if (!t.password) t.password = 'guru123';
+              this.clientDb.users.push(t);
+            }
+            this.saveClientDb();
+            return { success: true, message: 'Data akun guru berhasil disimpan.' };
+          }
+
+          if (cleanEp.includes('/admin/teachers/reset-password')) {
+            const { userId, newPassword } = body;
+            const u = this.clientDb.users.find(x => x.userId === userId);
+            if (u) {
+              u.password = newPassword;
+              this.saveClientDb();
+              return { success: true, message: `Password akun ${u.namaLengkap} berhasil direset.` };
+            }
+            return { success: false, message: 'Akun guru tidak ditemukan.' };
+          }
+
+          if (cleanEp.includes('/admin/teachers') && method === 'DELETE') {
+            const uId = endpoint.split('/').pop();
+            this.clientDb.users = this.clientDb.users.filter(u => u.userId !== uId);
+            this.saveClientDb();
+            return { success: true, message: 'Akun guru berhasil dihapus.' };
+          }
+
+          // 5. ADMIN CLASS / ROMBEL CRUD
+          if (cleanEp.includes('/admin/classes') && method === 'POST') {
+            const c = body;
+            const idx = this.clientDb.kelompok.findIndex(k => k.idKelompok === c.idKelompok);
+            if (idx >= 0) this.clientDb.kelompok[idx] = { ...this.clientDb.kelompok[idx], ...c };
+            else this.clientDb.kelompok.push(c);
+            this.saveClientDb();
+            return { success: true, message: 'Data kelompok berhasil disimpan.' };
+          }
+
+          if (cleanEp.includes('/admin/classes') && method === 'DELETE') {
+            const idK = endpoint.split('/').pop();
+            this.clientDb.kelompok = this.clientDb.kelompok.filter(k => k.idKelompok !== idK);
+            this.saveClientDb();
+            return { success: true, message: 'Kelompok berhasil dihapus.' };
+          }
+
+          // 6. ADMIN YEAR (TAPEL) CRUD
+          if (cleanEp.includes('/admin/years') && method === 'POST') {
+            const y = body;
+            if (y.statusAktif === 'AKTIF') {
+              this.clientDb.tahun_ajaran.forEach(t => t.statusAktif = 'NONAKTIF');
+            }
+            const idx = this.clientDb.tahun_ajaran.findIndex(t => t.idTahun === y.idTahun);
+            if (idx >= 0) this.clientDb.tahun_ajaran[idx] = { ...this.clientDb.tahun_ajaran[idx], ...y };
+            else this.clientDb.tahun_ajaran.push(y);
+            this.saveClientDb();
+            return { success: true, message: 'Tahun pelajaran berhasil disimpan.' };
+          }
+
+          if (cleanEp.includes('/admin/years') && method === 'DELETE') {
+            const idY = endpoint.split('/').pop();
+            this.clientDb.tahun_ajaran = this.clientDb.tahun_ajaran.filter(y => y.idTahun !== idY);
+            this.saveClientDb();
+            return { success: true, message: 'Tahun pelajaran berhasil dihapus.' };
           }
 
           if (cleanEp.includes('/admin/years/settings')) {
@@ -1158,6 +1592,9 @@
             if (y) {
               y.statusAktif = body.statusAktif;
               y.statusAksesOrtu = body.statusAksesOrtu;
+              if (body.statusAktif === 'AKTIF') {
+                this.clientDb.tahun_ajaran.forEach(t => { if (t.idTahun !== y.idTahun) t.statusAktif = 'NONAKTIF'; });
+              }
               this.saveClientDb();
             }
             return { success: true, message: 'Pengaturan tahun ajaran disimpan.' };
@@ -1169,13 +1606,14 @@
             return { success: true, message: 'Database reset berhasil!' };
           }
 
+          // 7. KEPSEK ACTIONS
           if (cleanEp.includes('/kepsek/summary')) {
             const rList = this.clientDb.raport;
             return {
               success: true,
               data: {
                 stats: {
-                  totalRaport: rList.length,
+                  totalMurid: this.clientDb.murid.length,
                   disetujui: rList.filter(r => r.statusApproval === 'DISETUJUI').length,
                   menungguAcc: rList.filter(r => r.statusApproval === 'DIAJUKAN').length,
                   perluRevisi: rList.filter(r => r.statusApproval === 'REVISI').length,
@@ -1216,11 +1654,12 @@
               r.tanggalReview = new Date().toLocaleString('id-ID');
               this.saveClientDb();
             }
-            return { success: true, message: 'Catatan revisi dikirim!' };
+            return { success: true, message: 'Catatan revisi dikirim ke Wali Kelas!' };
           }
 
+          // 8. TEACHER ACTIONS
           if (cleanEp.includes('/teacher/class-students')) {
-            const kel = this.currentUser?.kelompokDiampu || 'TK-A1';
+            const kel = this.currentUser?.kelompokDiampu || 'TKA-1';
             const sList = (kel === 'SEMUA') ? this.clientDb.murid : this.clientDb.murid.filter(s => s.idKelompok === kel);
             return {
               success: true,
@@ -1266,6 +1705,7 @@
             return { success: true, message: 'Berkas raport PDF berhasil diunggah & disimpan!' };
           }
 
+          // 9. PARENT ACTIONS
           if (cleanEp.includes('/parent/student-reports')) {
             const nis = this.currentUser?.nis;
             const m = this.clientDb.murid.find(s => s.nis === nis) || this.currentUser;
@@ -1288,7 +1728,7 @@
               r.tanggalDilihat = new Date().toLocaleString('id-ID');
               this.saveClientDb();
             }
-            return { success: true, message: 'Tanda terima berhasil disimpan!' };
+            return { success: true, message: 'Konfirmasi tanda terima berhasil dicatat.' };
           }
 
           return { success: true, message: 'OK' };
@@ -1340,7 +1780,6 @@
             const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
             if (body) opts.body = JSON.stringify(body);
 
-            // Attempt fetch to backend
             try {
               const res = await fetch(`/api${cleanEndpoint}`, opts);
               if (res && res.ok) {
@@ -1351,11 +1790,8 @@
                   return json;
                 }
               }
-            } catch (fetchErr) {
-              // Ignore network error and fall back to local reactive DB
-            }
+            } catch (fetchErr) {}
 
-            // Fallback to in-browser reactive mock database
             const mockRes = this.executeLocalMock(cleanEndpoint, method, body);
             this.loading = false;
             return mockRes;
@@ -1399,7 +1835,7 @@
           else if (this.currentUser.role === 'ORTU') this.loadParentData();
         },
 
-        // ================= ADMIN =================
+        // ================= ADMIN FUNCTIONS =================
         async loadAdminData() {
           const res = await this.apiCall('/admin/all-data');
           if (res.success && res.data) {
@@ -1407,11 +1843,30 @@
           }
         },
 
+        // Student CRUD
         openModalStudent(s) {
           if (s) {
             this.modalStudent = { show: true, isEdit: true, data: { ...s } };
           } else {
-            this.modalStudent = { show: true, isEdit: false, data: { nis: '', namaLengkap: '', jenjang: 'TK-A', idKelompok: 'TK-A1', status: 'AKTIF', pin: '' } };
+            const defaultClass = this.adminData.classes?.[0]?.idKelompok || 'PGA-1';
+            this.modalStudent = { 
+              show: true, 
+              isEdit: false, 
+              data: { 
+                nis: '', 
+                namaLengkap: '', 
+                namaPanggilan: '', 
+                jenisKelamin: 'L', 
+                jenjang: 'PG A', 
+                idKelompok: defaultClass, 
+                pin: '1234', 
+                namaAyah: '', 
+                namaIbu: '', 
+                kontakOrtu: '', 
+                status: 'AKTIF', 
+                alamat: '' 
+              } 
+            };
           }
         },
 
@@ -1433,9 +1888,144 @@
           }
         },
 
+        // Teacher CRUD & Reset Password
+        openModalTeacher(t) {
+          if (t) {
+            this.modalTeacher = { show: true, isEdit: true, data: { ...t } };
+          } else {
+            this.modalTeacher = { 
+              show: true, 
+              isEdit: false, 
+              data: { 
+                userId: '', 
+                username: '', 
+                password: 'guru123', 
+                namaLengkap: '', 
+                role: 'WALI_KELAS', 
+                kelompokDiampu: this.adminData.classes?.[0]?.idKelompok || 'TKA-1', 
+                kontakWa: '', 
+                status: 'AKTIF' 
+              } 
+            };
+          }
+        },
+
+        async saveTeacherSubmit() {
+          const res = await this.apiCall('/admin/teachers', 'POST', this.modalTeacher.data);
+          if (res.success) {
+            this.modalTeacher.show = false;
+            this.showToast(res.message || 'Data akun guru berhasil disimpan!', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        openModalResetPassword(t) {
+          this.modalResetPass = {
+            show: true,
+            userId: t.userId,
+            username: t.username,
+            namaLengkap: t.namaLengkap,
+            newPassword: ''
+          };
+        },
+
+        async submitResetPasswordGuru() {
+          const res = await this.apiCall('/admin/teachers/reset-password', 'POST', {
+            userId: this.modalResetPass.userId,
+            newPassword: this.modalResetPass.newPassword
+          });
+          if (res.success) {
+            this.modalResetPass.show = false;
+            this.showToast(res.message || 'Password berhasil direset!', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        async deleteTeacher(userId, nama) {
+          if (!confirm(`Hapus akun ${nama}?`)) return;
+          const res = await this.apiCall(`/admin/teachers/${userId}`, 'DELETE');
+          if (res.success) {
+            this.showToast('Akun guru berhasil dihapus.', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        // Class / Rombel CRUD
+        openModalClass(c) {
+          if (c) {
+            this.modalClass = { show: true, isEdit: true, data: { ...c } };
+          } else {
+            this.modalClass = { 
+              show: true, 
+              isEdit: false, 
+              data: { 
+                idKelompok: '', 
+                namaKelompok: '', 
+                jenjang: 'PG A', 
+                idWaliKelas: '', 
+                namaWaliKelas: '', 
+                kapasitas: 15, 
+                status: 'AKTIF' 
+              } 
+            };
+          }
+        },
+
+        onClassTeacherChange(e) {
+          const tId = e.target.value;
+          const teacher = this.adminData.teachers.find(t => t.userId === tId);
+          this.modalClass.data.namaWaliKelas = teacher ? teacher.namaLengkap : '';
+        },
+
+        async saveClassSubmit() {
+          const res = await this.apiCall('/admin/classes', 'POST', this.modalClass.data);
+          if (res.success) {
+            this.modalClass.show = false;
+            this.showToast(res.message || 'Data kelompok berhasil disimpan!', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        async deleteClass(idKelompok, nama) {
+          if (!confirm(`Hapus kelompok ${nama} (${idKelompok})?`)) return;
+          const res = await this.apiCall(`/admin/classes/${idKelompok}`, 'DELETE');
+          if (res.success) {
+            this.showToast('Kelompok berhasil dihapus.', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        // Year (Tapel) CRUD
+        openModalYear(y) {
+          if (y) {
+            this.modalYear = { show: true, isEdit: true, data: { ...y } };
+          } else {
+            this.modalYear = { 
+              show: true, 
+              isEdit: false, 
+              data: { 
+                idTahun: '', 
+                namaTahun: '2025/2026', 
+                semester: 'Ganjil (Semester 1)', 
+                statusAktif: 'AKTIF', 
+                statusAksesOrtu: 'DIBUKA' 
+              } 
+            };
+          }
+        },
+
+        async saveYearSubmit() {
+          const res = await this.apiCall('/admin/years', 'POST', this.modalYear.data);
+          if (res.success) {
+            this.modalYear.show = false;
+            this.showToast(res.message || 'Tahun pelajaran disimpan!', 'success');
+            this.loadAdminData();
+          }
+        },
+
         async toggleYearAccess(y) {
-          const newStatus = confirm(`Aktifkan periode ${y.namaTahun} (${y.semester})?`) ? 'AKTIF' : y.statusAktif;
-          const newAkses = confirm(`Buka akses raport untuk wali murid?`) ? 'DIBUKA' : 'DITUTUP';
+          const newStatus = y.statusAktif === 'AKTIF' ? 'NONAKTIF' : 'AKTIF';
+          const newAkses = y.statusAksesOrtu === 'DIBUKA' ? 'DITUTUP' : 'DIBUKA';
           const res = await this.apiCall('/admin/years/settings', 'POST', {
             idTahun: y.idTahun,
             statusAktif: newStatus,
@@ -1447,11 +2037,37 @@
           }
         },
 
+        async deleteYear(idTahun) {
+          if (!confirm(`Hapus tahun pelajaran ${idTahun}?`)) return;
+          const res = await this.apiCall(`/admin/years/${idTahun}`, 'DELETE');
+          if (res.success) {
+            this.showToast('Tahun pelajaran berhasil dihapus.', 'success');
+            this.loadAdminData();
+          }
+        },
+
+        // Branding & Settings
+        handleLogoUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            this.schoolSettings.logoImg = e.target.result;
+            this.schoolSettings.logoType = 'image';
+          };
+          reader.readAsDataURL(file);
+        },
+
+        saveSchoolSettingsSubmit() {
+          localStorage.setItem('ANAK_SALEH_SCHOOL_SETTINGS', JSON.stringify(this.schoolSettings));
+          this.showToast('Pengaturan tampilan & logo sekolah berhasil disimpan!', 'success');
+        },
+
         async resetSimulation() {
-          if (!confirm('Apakah Anda yakin ingin mereset seluruh data simulasi?')) return;
+          if (!confirm('Apakah Anda yakin ingin mereset seluruh data kembali ke setelan awal?')) return;
           const res = await this.apiCall('/admin/reset', 'POST');
           if (res.success) {
-            this.showToast('Database simulasi berhasil direset!', 'success');
+            this.showToast('Database berhasil direset!', 'success');
             this.loadAdminData();
           }
         },
@@ -1475,7 +2091,7 @@
             kepsekName: this.currentUser?.namaLengkap || 'Kepala Sekolah'
           });
           if (res.success) {
-            this.showToast(res.message || 'Raport berhasil di-ACC!', 'success');
+            this.showToast(res.message || 'Raport berhasil di-ACC & diterbitkan!', 'success');
             this.loadKepsekData();
           }
         },
@@ -1499,7 +2115,7 @@
 
         // ================= TEACHER =================
         async loadTeacherData() {
-          const kel = this.currentUser?.kelompokDiampu || 'SEMUA';
+          const kel = this.currentUser?.kelompokDiampu || 'TKA-1';
           const res = await this.apiCall(`/teacher/class-students?kelompok=${kel}`);
           if (res.success && res.data) this.teacherData = res.data;
         },
