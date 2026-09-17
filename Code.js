@@ -114,6 +114,11 @@ function executeAction(action, args) {
       return getTeachersListAdmin();
     case 'saveTeacherAdmin':
       return saveTeacherAdmin(args[0], args[1]);
+    case 'resetTeacherPasswordAdmin':
+    case 'resetPasswordTeacherAdmin':
+      return resetTeacherPasswordAdmin(args[0], args[1], args[2]);
+    case 'deleteTeacherAdmin':
+      return deleteTeacherAdmin(args[0], args[1]);
     case 'getClassesListAdmin':
       return getClassesListAdmin();
     case 'saveClassAdmin':
@@ -124,8 +129,16 @@ function executeAction(action, args) {
       return getClassStudentsAdmin(args[0]);
     case 'getAcademicYearsListAdmin':
       return getAcademicYearsListAdmin();
+    case 'saveAcademicYearAdmin':
+      return saveAcademicYearAdmin(args[0], args[1]);
+    case 'deleteAcademicYearAdmin':
+      return deleteAcademicYearAdmin(args[0], args[1]);
     case 'setAcademicYearSettingsAdmin':
       return setAcademicYearSettingsAdmin(args[0], args[1], args[2], args[3]);
+    case 'saveSchoolSettingsAdmin':
+      return saveSchoolSettingsAdmin(args[0], args[1]);
+    case 'getSchoolSettingsAdmin':
+      return getSchoolSettingsAdmin();
     case 'toggleReportPublishStatus':
       return toggleReportPublishStatus(args[0], args[1], args[2]);
     case 'getActivityLogsAdmin':

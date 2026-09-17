@@ -911,3 +911,115 @@ function getActivityLogsAdmin(limit) {
     return apiResponse(false, null, "Gagal memuat log: " + err.message);
   }
 }
+
+/**
+ * Menyimpan Pengaturan Branding Sekolah & Logo ke Script Properties (Shared Cloud)
+ */
+function saveSchoolSettingsAdmin(settings, adminUser) {
+  try {
+    if (!settings) return apiResponse(false, null, "Data pengaturan kosong.");
+    var props = PropertiesService.getScriptProperties();
+    props.setProperty("SCHOOL_SETTINGS_JSON", JSON.stringify(settings));
+    logActivity(adminUser || "ADMIN", "ADMIN", "PENGATURAN SEKOLAH", "Memperbarui branding dan logo sekolah");
+    return apiResponse(true, settings, "Pengaturan dan logo sekolah berhasil disimpan ke cloud Google Apps Script.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal menyimpan pengaturan: " + err.message);
+  }
+}
+
+/**
+ * Mengambil Pengaturan Branding Sekolah & Logo dari Cloud
+ */
+function getSchoolSettingsAdmin() {
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var raw = props.getProperty("SCHOOL_SETTINGS_JSON");
+    if (raw) {
+      return apiResponse(true, JSON.parse(raw), "Pengaturan sekolah berhasil dimuat.");
+    }
+    return apiResponse(true, {
+      name: "PG - TK - DAYCARE ANAK SALEH",
+      tagline: "Portal Raport & Perkembangan Anak Usia Dini",
+      logoType: "emoji",
+      logoEmoji: "🌱",
+      logoImg: "",
+      alamat: "Jl. Pendidikan No. 45, Kebayoran Baru, Jakarta Selatan",
+      telepon: "0812-3456-7890"
+    }, "Menggunakan pengaturan default.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal memuat pengaturan: " + err.message);
+  }
+}
+
+/**
+ * Menyimpan / Update Tahun Ajaran (Tapel)
+ */
+function saveAcademicYearAdmin(yearObj, adminUser) {
+  try {
+    if (!yearObj || !yearObj.idTahun) return apiResponse(false, null, "ID Tahun Ajaran wajib diisi.");
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var taSheet = ss.getSheetByName("DB_TahunAjaran");
+    var data = taSheet.getDataRange().getValues();
+    var rowIndex = -1;
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(yearObj.idTahun).trim()) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (yearObj.statusAktif === "AKTIF") {
+      for (var k = 1; k < data.length; k++) {
+        taSheet.getRange(k + 1, 4).setValue("NONAKTIF");
+      }
+    }
+
+    var rowValues = [
+      yearObj.idTahun,
+      yearObj.namaTahun || "2025/2026",
+      yearObj.semester || "Ganjil (Semester 1)",
+      yearObj.statusAktif || "NONAKTIF",
+      yearObj.statusAksesOrtu || "DITUTUP"
+    ];
+
+    if (rowIndex > 0) {
+      taSheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
+      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE TA", "Memperbarui tahun pelajaran: " + yearObj.idTahun);
+      return apiResponse(true, yearObj, "Tahun pelajaran berhasil diperbarui.");
+    } else {
+      taSheet.appendRow(rowValues);
+      logActivity(adminUser || "ADMIN", "ADMIN", "TAMBAH TA", "Menambahkan tahun pelajaran baru: " + yearObj.idTahun);
+      return apiResponse(true, yearObj, "Tahun pelajaran baru berhasil ditambahkan.");
+    }
+  } catch (err) {
+    return apiResponse(false, null, "Gagal menyimpan tahun pelajaran: " + err.message);
+  }
+}
+
+/**
+ * Hapus Tahun Ajaran (Tapel)
+ */
+function deleteAcademicYearAdmin(idTahun, adminUser) {
+  try {
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var taSheet = ss.getSheetByName("DB_TahunAjaran");
+    var data = taSheet.getDataRange().getValues();
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(idTahun).trim()) {
+        taSheet.deleteRow(i + 1);
+        logActivity(adminUser || "ADMIN", "ADMIN", "HAPUS TA", "Menghapus tahun pelajaran: " + idTahun);
+        return apiResponse(true, null, "Tahun pelajaran berhasil dihapus.");
+      }
+    }
+    return apiResponse(false, null, "Tahun pelajaran tidak ditemukan.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal menghapus tahun pelajaran: " + err.message);
+  }
+}
+

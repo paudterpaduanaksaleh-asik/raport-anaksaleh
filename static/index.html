@@ -782,6 +782,62 @@
             </button>
           </div>
         </form>
+
+        <!-- CLOUD DATABASE SYNC (GOOGLE APPS SCRIPT / GOOGLE SHEETS) -->
+        <div class="mt-8 pt-6 border-t-2 border-slate-200/80 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                  <i class="fas fa-cloud"></i>
+                </span>
+                <h4 class="font-extrabold text-base text-slate-800">Sinkronisasi Database Cloud (Google Sheets / GAS)</h4>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Hubungkan website dengan Google Apps Script agar seluruh perubahan data murid, guru, raport, & logo tersinkronisasi multi-browser dan multi-perangkat secara real-time.</p>
+            </div>
+            <div>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-sm"
+                    :class="schoolSettings.gasWebAppUrl && schoolSettings.gasWebAppUrl.trim().startsWith('http') ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'">
+                <i class="fas" :class="schoolSettings.gasWebAppUrl && schoolSettings.gasWebAppUrl.trim().startsWith('http') ? 'fa-check-circle text-emerald-600' : 'fa-info-circle text-amber-600'"></i>
+                <span x-text="schoolSettings.gasWebAppUrl && schoolSettings.gasWebAppUrl.trim().startsWith('http') ? 'Cloud Backend Aktif' : 'Mode Offline / LocalStorage'"></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+            <div>
+              <label class="block font-bold text-slate-700 text-xs mb-1">
+                URL Deployment Web App Google Apps Script (GAS) *
+              </label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input type="url" x-model="schoolSettings.gasWebAppUrl" placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                       class="flex-grow p-2.5 rounded-xl border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-teal-500">
+                <button type="button" @click="testGasConnection()" :disabled="loading"
+                        class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap">
+                  <i class="fas fa-plug"></i>
+                  <span x-text="loading ? 'Menguji...' : 'Uji Koneksi & Sinkron'"></span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">
+                Format URL: <code class="bg-slate-200 px-1 py-0.5 rounded text-[10px]">https://script.google.com/macros/s/AKfycb.../exec</code>
+              </p>
+            </div>
+
+            <!-- Petunjuk Langkah Cepat -->
+            <div class="p-3 bg-sky-50 rounded-xl border border-sky-200 text-[11px] text-sky-900 space-y-1">
+              <div class="font-bold flex items-center gap-1.5 text-sky-700">
+                <i class="fas fa-question-circle"></i> Cara Mendapatkan URL Web App dari Google Apps Script:
+              </div>
+              <ol class="list-decimal list-inside space-y-0.5 ml-1 text-[11px] text-slate-600 leading-relaxed">
+                <li>Buka file project Google Apps Script (<a href="https://script.google.com" target="_blank" class="text-teal-600 underline font-bold">script.google.com</a>).</li>
+                <li>Klik tombol biru <b>Deploy (Terapkan)</b> &rarr; <b>New deployment (Penerapan baru)</b>.</li>
+                <li>Pilih jenis <b>Web app (Aplikasi web)</b>.</li>
+                <li>Atur <i>Execute as</i>: <b>Me (Saya)</b>, dan <i>Who has access</i>: <b>Anyone (Siapa saja)</b>.</li>
+                <li>Klik <b>Deploy</b>, salin <b>Web app URL</b>, lalu tempelkan pada kolom di atas dan klik <b>Simpan Pengaturan</b>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1561,7 +1617,8 @@
           logoEmoji: '🌱',
           logoImg: '',
           alamat: 'Jl. Pendidikan No. 45, Kebayoran Baru, Jakarta Selatan',
-          telepon: '0812-3456-7890'
+          telepon: '0812-3456-7890',
+          gasWebAppUrl: ''
         },
 
         // Admin State
@@ -2009,7 +2066,7 @@
           return { success: true, message: 'OK' };
         },
 
-        initApp() {
+        async initApp() {
           const savedTheme = localStorage.getItem('ANAK_SALEH_THEME');
           if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             this.darkMode = true;
@@ -2019,7 +2076,24 @@
             document.documentElement.classList.remove('dark');
           }
 
+          const savedGas = localStorage.getItem('ANAK_SALEH_GAS_URL');
+          if (savedGas && !this.schoolSettings.gasWebAppUrl) {
+            this.schoolSettings.gasWebAppUrl = savedGas;
+          }
+
           this.initLocalDb();
+
+          // Muat pengaturan sekolah terbaru dari cloud jika terhubung ke Google Apps Script
+          if (this.schoolSettings.gasWebAppUrl) {
+            try {
+              const setRes = await this.apiCall('/admin/settings', 'GET');
+              if (setRes && setRes.success && setRes.data) {
+                this.schoolSettings = { ...this.schoolSettings, ...setRes.data, gasWebAppUrl: this.schoolSettings.gasWebAppUrl };
+                localStorage.setItem('ANAK_SALEH_SCHOOL_SETTINGS', JSON.stringify(this.schoolSettings));
+              }
+            } catch (e) {}
+          }
+
           const saved = localStorage.getItem('ANAK_SALEH_SESSION');
           if (saved) {
             try {
@@ -2075,14 +2149,121 @@
           return list;
         },
 
+        mapEndpointToGas(endpoint, method, body) {
+          const cleanEp = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+          const adminUser = this.currentUser?.namaLengkap || 'ADMIN';
+
+          if (cleanEp.includes('/auth/login')) {
+            return { action: 'handleLogin', args: [body] };
+          }
+          if (cleanEp.includes('/admin/all-data')) {
+            return { action: 'getAdminAllData', args: [] };
+          }
+          if (cleanEp.includes('/admin/students/bulk')) {
+            return { action: 'bulkSaveStudentsAdmin', args: [body.students || [], adminUser] };
+          }
+          if (cleanEp.includes('/admin/students') && method === 'POST') {
+            return { action: 'saveStudentAdmin', args: [body, adminUser] };
+          }
+          if (cleanEp.includes('/admin/students') && method === 'DELETE') {
+            const nis = cleanEp.split('/').pop();
+            return { action: 'deleteStudentAdmin', args: [nis, adminUser] };
+          }
+          if (cleanEp.includes('/admin/teachers/reset-password')) {
+            return { action: 'resetTeacherPasswordAdmin', args: [body.userId, body.newPassword, adminUser] };
+          }
+          if (cleanEp.includes('/admin/teachers') && method === 'POST') {
+            return { action: 'saveTeacherAdmin', args: [body, adminUser] };
+          }
+          if (cleanEp.includes('/admin/teachers') && method === 'DELETE') {
+            const uId = cleanEp.split('/').pop();
+            return { action: 'deleteTeacherAdmin', args: [uId, adminUser] };
+          }
+          if (cleanEp.includes('/admin/classes') && method === 'POST') {
+            return { action: 'saveClassAdmin', args: [body, adminUser] };
+          }
+          if (cleanEp.includes('/admin/classes') && method === 'DELETE') {
+            const idK = cleanEp.split('/').pop();
+            return { action: 'deleteClassAdmin', args: [idK, adminUser] };
+          }
+          if (cleanEp.includes('/admin/years/settings')) {
+            return { action: 'setAcademicYearSettingsAdmin', args: [body.idTahun, body.statusAktif, body.statusAksesOrtu, adminUser] };
+          }
+          if (cleanEp.includes('/admin/years') && method === 'POST') {
+            return { action: 'saveAcademicYearAdmin', args: [body, adminUser] };
+          }
+          if (cleanEp.includes('/admin/years') && method === 'DELETE') {
+            const idY = cleanEp.split('/').pop();
+            return { action: 'deleteAcademicYearAdmin', args: [idY, adminUser] };
+          }
+          if (cleanEp.includes('/admin/settings') && method === 'POST') {
+            return { action: 'saveSchoolSettingsAdmin', args: [body, adminUser] };
+          }
+          if (cleanEp.includes('/admin/settings') && method === 'GET') {
+            return { action: 'getSchoolSettingsAdmin', args: [] };
+          }
+          if (cleanEp.includes('/admin/reset')) {
+            return { action: 'resetDataForSimulation', args: [] };
+          }
+          if (cleanEp.includes('/kepsek/summary')) {
+            return { action: 'getKepsekDashboardSummary', args: [] };
+          }
+          if (cleanEp.includes('/kepsek/reports')) {
+            return { action: 'getKepsekReportsList', args: [this.kepsekFilterStatus || 'SEMUA', 'SEMUA'] };
+          }
+          if (cleanEp.includes('/kepsek/approve')) {
+            return { action: 'approveReportKepsek', args: [body.idRaport, body.kepsekName || this.currentUser?.namaLengkap || 'Kepala Sekolah'] };
+          }
+          if (cleanEp.includes('/kepsek/reject')) {
+            return { action: 'rejectReportKepsek', args: [body.idRaport, body.notes, body.kepsekName || this.currentUser?.namaLengkap || 'Kepala Sekolah'] };
+          }
+          if (cleanEp.includes('/teacher/class-students')) {
+            const kel = this.currentUser?.kelompokDiampu || 'TKA-1';
+            return { action: 'getTeacherClassStudents', args: [kel] };
+          }
+          if (cleanEp.includes('/teacher/upload-report')) {
+            return { action: 'uploadStudentReport', args: [body] };
+          }
+          if (cleanEp.includes('/parent/student-reports')) {
+            const nis = this.currentUser?.nis || '';
+            return { action: 'getParentStudentReports', args: [nis] };
+          }
+          if (cleanEp.includes('/parent/confirm-viewed')) {
+            return { action: 'confirmReportViewedByParent', args: [body.idRaport, body.parentName || 'Wali Murid'] };
+          }
+
+          return null;
+        },
+
         async apiCall(endpoint, method = 'GET', body = null) {
           this.loading = true;
           try {
-            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-            const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-            if (body) opts.body = JSON.stringify(body);
+            const gasUrl = (this.schoolSettings.gasWebAppUrl || localStorage.getItem('ANAK_SALEH_GAS_URL') || '').trim();
+            if (gasUrl && gasUrl.startsWith('http')) {
+              const gasPayload = this.mapEndpointToGas(endpoint, method, body);
+              if (gasPayload) {
+                try {
+                  const res = await fetch(gasUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(gasPayload)
+                  });
+                  if (res && res.ok) {
+                    const json = await res.json();
+                    this.loading = false;
+                    return json;
+                  }
+                } catch (gasErr) {
+                  console.warn('Google Apps Script sync warning:', gasErr);
+                }
+              }
+            }
 
             try {
+              const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+              const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+              if (body) opts.body = JSON.stringify(body);
               const res = await fetch(`/api${cleanEndpoint}`, opts);
               if (res && res.ok) {
                 const contentType = res.headers.get('content-type') || '';
@@ -2094,7 +2275,7 @@
               }
             } catch (fetchErr) {}
 
-            const mockRes = this.executeLocalMock(cleanEndpoint, method, body);
+            const mockRes = this.executeLocalMock(endpoint, method, body);
             this.loading = false;
             return mockRes;
           } catch (err) {
@@ -2365,9 +2546,47 @@
           reader.readAsDataURL(file);
         },
 
-        saveSchoolSettingsSubmit() {
+        async saveSchoolSettingsSubmit() {
+          if (this.schoolSettings.gasWebAppUrl) {
+            localStorage.setItem('ANAK_SALEH_GAS_URL', this.schoolSettings.gasWebAppUrl.trim());
+          }
           localStorage.setItem('ANAK_SALEH_SCHOOL_SETTINGS', JSON.stringify(this.schoolSettings));
-          this.showToast('Pengaturan tampilan & logo sekolah berhasil disimpan!', 'success');
+          
+          // Kirim juga ke Cloud Google Apps Script jika terhubung
+          await this.apiCall('/admin/settings', 'POST', this.schoolSettings);
+          this.showToast('Pengaturan tampilan & logo sekolah berhasil disimpan & disinkronkan!', 'success');
+        },
+
+        async testGasConnection() {
+          const url = (this.schoolSettings.gasWebAppUrl || '').trim();
+          if (!url || !url.startsWith('http')) {
+            this.showToast('Masukkan URL Web App Google Apps Script yang valid.', 'warning');
+            return;
+          }
+          this.loading = true;
+          try {
+            const res = await fetch(url, {
+              method: 'POST',
+              mode: 'cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ action: 'getAdminDashboardSummary', args: [] })
+            });
+            if (res && res.ok) {
+              const data = await res.json();
+              if (data && data.success) {
+                localStorage.setItem('ANAK_SALEH_GAS_URL', url);
+                localStorage.setItem('ANAK_SALEH_SCHOOL_SETTINGS', JSON.stringify(this.schoolSettings));
+                this.showToast('✅ Berhasil terhubung ke Cloud Google Apps Script & Google Sheets!', 'success');
+                this.loadRoleData();
+                return;
+              }
+            }
+            this.showToast('Terkoneksi ke URL, silakan pastikan permission Web App diatur "Anyone" (Siapa saja).', 'warning');
+          } catch (err) {
+            this.showToast('Gagal menghubungi Web App URL: ' + err.message, 'error');
+          } finally {
+            this.loading = false;
+          }
         },
 
         async resetSimulation() {
