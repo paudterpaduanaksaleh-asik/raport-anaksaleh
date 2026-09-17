@@ -1,6 +1,7 @@
 /**
  * ============================================================================
- * MODUL ADMIN (KONTROL DATA MASTER & PUBLIKASI)
+ * MODUL ADMIN (KONTROL DATA MASTER MURID, GURU, KELOMPOK, & PUBLIKASI)
+ * PG - TK - DAYCARE ANAK SALEH
  * ============================================================================
  */
 
@@ -15,35 +16,58 @@ function getAdminDashboardSummary() {
       ss = getDatabaseSpreadsheet();
     }
 
-    var siswaSheet = ss.getSheetByName("DB_Siswa");
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
     var usersSheet = ss.getSheetByName("DB_Users");
-    var kelasSheet = ss.getSheetByName("DB_Kelas");
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
     var raportSheet = ss.getSheetByName("DB_Raport");
     var taSheet = ss.getSheetByName("DB_TahunAjaran");
 
-    var siswaData = siswaSheet.getDataRange().getValues();
-    var usersData = usersSheet.getDataRange().getValues();
-    var kelasData = kelasSheet.getDataRange().getValues();
-    var raportData = raportSheet.getDataRange().getValues();
-    var taData = taSheet.getDataRange().getValues();
+    var muridData = muridSheet ? muridSheet.getDataRange().getValues() : [];
+    var usersData = usersSheet ? usersSheet.getDataRange().getValues() : [];
+    var kelompokData = kelompokSheet ? kelompokSheet.getDataRange().getValues() : [];
+    var raportData = raportSheet ? raportSheet.getDataRange().getValues() : [];
+    var taData = taSheet ? taSheet.getDataRange().getValues() : [];
 
-    // Hitung Siswa Aktif
-    var totalSiswa = 0;
+    // Hitung Murid Aktif
+    var totalMurid = 0;
     var perJenjang = { "Playgroup (PG)": 0, "TK-A": 0, "TK-B": 0, "Daycare": 0 };
-    for (var i = 1; i < siswaData.length; i++) {
-      if (String(siswaData[i][11]).trim().toUpperCase() === "AKTIF") {
-        totalSiswa++;
-        var jg = siswaData[i][4];
+    for (var i = 1; i < muridData.length; i++) {
+      if (String(muridData[i][11] || "AKTIF").trim().toUpperCase() === "AKTIF") {
+        totalMurid++;
+        var jg = muridData[i][4];
         if (perJenjang[jg] !== undefined) perJenjang[jg]++;
       }
     }
 
-    // Hitung Wali Kelas
-    var totalWaliKelas = 0;
+    // Hitung Guru & Kepsek
+    var totalGuru = 0;
+    var totalKepsek = 0;
     for (var j = 1; j < usersData.length; j++) {
-      if (String(usersData[j][4]).trim().toUpperCase() === "WALI_KELAS" && String(usersData[j][7]).trim().toUpperCase() === "AKTIF") {
-        totalWaliKelas++;
+      var r = String(usersData[j][4] || "").trim().toUpperCase();
+      var st = String(usersData[j][7] || "AKTIF").trim().toUpperCase();
+      if (st === "AKTIF") {
+        if (r === "WALI_KELAS" || r === "GURU") totalGuru++;
+        else if (r === "KEPSEK") totalKepsek++;
       }
+    }
+
+    // Hitung Kelompok
+    var totalKelompok = Math.max(0, kelompokData.length - 1);
+
+    // Hitung Status Raport
+    var raportStats = {
+      total: Math.max(0, raportData.length - 1),
+      draf: 0,
+      diajukan: 0,
+      revisi: 0,
+      disetujui: 0
+    };
+    for (var rp = 1; rp < raportData.length; rp++) {
+      var appSt = String(raportData[rp][8] || "").toUpperCase();
+      if (appSt === "DIAJUKAN") raportStats.diajukan++;
+      else if (appSt === "REVISI") raportStats.revisi++;
+      else if (appSt === "DISETUJUI") raportStats.disetujui++;
+      else if (appSt === "DRAF") raportStats.draf++;
     }
 
     // Tahun Ajaran Aktif
@@ -60,490 +84,521 @@ function getAdminDashboardSummary() {
       }
     }
 
-    // Hitung Raport Terunggah & Terpublikasi pada TA Aktif
-    var totalRaportUploaded = 0;
-    var totalRaportPublished = 0;
-    var totalRaportDilihatOrtu = 0;
-
-    for (var r = 1; r < raportData.length; r++) {
-      var rTA = String(raportData[r][5]).trim();
-      var rSem = String(raportData[r][6]).trim();
-      if (rTA === activeTA.tahun && rSem === activeTA.semester) {
-        totalRaportUploaded++;
-        if (String(raportData[r][11]).trim().toUpperCase() === "PUBLISHED") {
-          totalRaportPublished++;
-        }
-        if (String(raportData[r][15]).trim().toUpperCase() === "SUDAH_DILIHAT" || raportData[r][16]) {
-          totalRaportDilihatOrtu++;
-        }
+    // Daftar Kelompok untuk Dropdown Filter
+    var kelompokOptions = [];
+    for (var c = 1; c < kelompokData.length; c++) {
+      if (kelompokData[c][0]) {
+        kelompokOptions.push({
+          id: String(kelompokData[c][0]),
+          nama: String(kelompokData[c][1]),
+          jenjang: String(kelompokData[c][2]),
+          waliKelas: String(kelompokData[c][4] || "")
+        });
       }
     }
 
-    return apiResponse(true, {
-      totalSiswa: totalSiswa,
+    var summary = {
+      totalMurid: totalMurid,
       perJenjang: perJenjang,
-      totalWaliKelas: totalWaliKelas,
-      totalKelas: Math.max(0, kelasData.length - 1),
+      totalGuru: totalGuru,
+      totalKepsek: totalKepsek,
+      totalKelompok: totalKelompok,
+      raportStats: raportStats,
       activeTA: activeTA,
-      totalRaportUploaded: totalRaportUploaded,
-      totalRaportPublished: totalRaportPublished,
-      totalRaportDilihatOrtu: totalRaportDilihatOrtu
-    });
+      kelompokOptions: kelompokOptions
+    };
 
+    return apiResponse(true, summary, "Data summary Admin berhasil dimuat.");
   } catch (err) {
     console.error("Admin Summary Error: " + err.stack);
-    return apiResponse(false, null, "Gagal mengambil data ringkasan: " + err.message);
+    return apiResponse(false, null, "Gagal memuat summary dashboard: " + err.message);
   }
 }
 
 /**
- * Mendapatkan Semua Data Siswa
+ * Mengambil daftar data murid lengkap dengan filter jenjang & kelompok
  */
-function getStudentsListAdmin(filterJenjang, filterKelas) {
+function getStudentsListAdmin(filterJenjang, filterKelompok) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Siswa");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var data = muridSheet.getDataRange().getValues();
     var list = [];
 
+    // Header: [NIS, Nama_Lengkap, Nama_Panggilan, Jenis_Kelamin, Jenjang, ID_Kelompok, Tempat_Lahir, Tanggal_Lahir, Nama_Ayah, Nama_Ibu, Kontak_Ortu, Status_Murid, Alamat, PIN_Akses, Timestamp]
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
       if (!row[0]) continue;
-      
-      var sJenjang = row[4];
-      var sKelas = row[5];
 
-      if (filterJenjang && filterJenjang !== "SEMUA" && sJenjang !== filterJenjang) continue;
-      if (filterKelas && filterKelas !== "SEMUA" && sKelas !== filterKelas) continue;
+      var jenjang = String(row[4] || "");
+      var kelompok = String(row[5] || "");
+
+      if (filterJenjang && filterJenjang !== "SEMUA" && jenjang !== filterJenjang) continue;
+      if (filterKelompok && filterKelompok !== "SEMUA" && kelompok !== filterKelompok) continue;
+
+      var tglLahir = "";
+      if (row[7]) {
+        if (row[7] instanceof Date) {
+          tglLahir = Utilities.formatDate(row[7], "GMT+7", "yyyy-MM-dd");
+        } else {
+          tglLahir = String(row[7]);
+        }
+      }
 
       list.push({
-        nis: String(row[0]),
-        nisn: String(row[1]),
-        namaSiswa: row[2],
-        namaPanggilan: row[3],
-        jenjang: row[4],
-        kelas: row[5],
-        jenisKelamin: row[6],
-        tanggalLahir: row[7],
-        namaOrangtua: row[8],
-        noWa: String(row[9]),
-        pinOrtu: String(row[10]),
-        status: row[11]
+        nis: String(row[0]).trim(),
+        namaLengkap: String(row[1] || ""),
+        namaPanggilan: String(row[2] || ""),
+        jenisKelamin: String(row[3] || ""),
+        jenjang: jenjang,
+        idKelompok: kelompok,
+        tempatLahir: String(row[6] || ""),
+        tanggalLahir: tglLahir,
+        namaAyah: String(row[8] || ""),
+        namaIbu: String(row[9] || ""),
+        kontakOrtu: String(row[10] || ""),
+        status: String(row[11] || "AKTIF"),
+        alamat: String(row[12] || ""),
+        pin: String(row[13] || "")
       });
     }
 
-    return apiResponse(true, list);
+    return apiResponse(true, list, "Data murid berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengambil data murid: " + err.message);
   }
 }
 
 /**
- * Tambah atau Perbarui Data Siswa
+ * Menyimpan atau memperbarui data murid (Single)
  */
 function saveStudentAdmin(student, adminUser) {
   try {
+    if (!student || !student.nis || !student.namaLengkap) {
+      return apiResponse(false, null, "NIS dan Nama Lengkap murid wajib diisi.");
+    }
+
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Siswa");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var data = muridSheet.getDataRange().getValues();
     
     var nis = String(student.nis).trim();
-    if (!nis) return apiResponse(false, null, "NIS wajib diisi!");
+    var rowIndex = -1;
 
-    var foundRow = -1;
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === nis) {
-        foundRow = i + 1;
+        rowIndex = i + 1;
         break;
+      }
+    }
+
+    // Default PIN: 6 digit tanggal lahir (DDMMYY) atau 123456
+    var pin = student.pin || "123456";
+    if (student.tanggalLahir && (!student.pin || student.pin === "")) {
+      var parts = String(student.tanggalLahir).split("-");
+      if (parts.length === 3) {
+        pin = parts[2] + parts[1] + parts[0].slice(-2);
       }
     }
 
     var rowValues = [
       nis,
-      String(student.nisn || ""),
-      student.namaSiswa,
-      student.namaPanggilan || "",
-      student.jenjang,
-      student.kelas,
-      student.jenisKelamin,
+      student.namaLengkap,
+      student.namaPanggilan || student.namaLengkap,
+      student.jenisKelamin || "L",
+      student.jenjang || "TK-A",
+      student.idKelompok || "-",
+      student.tempatLahir || "",
       student.tanggalLahir || "",
-      student.namaOrangtua || "",
-      String(student.noWa || ""),
-      String(student.pinOrtu || "1234"),
-      student.status || "AKTIF"
+      student.namaAyah || "",
+      student.namaIbu || "",
+      student.kontakOrtu || "",
+      student.status || "AKTIF",
+      student.alamat || "",
+      pin,
+      new Date()
     ];
 
-    if (foundRow > 0) {
-      sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE_SISWA", "Memperbarui data siswa: " + student.namaSiswa + " (" + nis + ")");
-      return apiResponse(true, null, "Data siswa " + student.namaSiswa + " berhasil diperbarui.");
+    if (rowIndex > 0) {
+      // Update data murid
+      muridSheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
+      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE MURID", "Memperbarui data murid NIS: " + nis + " (" + student.namaLengkap + ")");
+      return apiResponse(true, student, "Data murid berhasil diperbarui.");
     } else {
-      sheet.appendRow(rowValues);
-      logActivity(adminUser || "ADMIN", "ADMIN", "CREATE_SISWA", "Menambahkan siswa baru: " + student.namaSiswa + " (" + nis + ")");
-      return apiResponse(true, null, "Siswa baru " + student.namaSiswa + " berhasil ditambahkan.");
+      // Tambah murid baru
+      muridSheet.appendRow(rowValues);
+      logActivity(adminUser || "ADMIN", "ADMIN", "TAMBAH MURID", "Menambahkan murid baru NIS: " + nis + " (" + student.namaLengkap + ")");
+      return apiResponse(true, student, "Murid baru berhasil ditambahkan.");
     }
+
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menyimpan data murid: " + err.message);
   }
 }
 
 /**
- * Bulk Import Data Siswa Secara Massal (CSV / Array)
+ * Bulk Import / Simpan Massal Data Murid
  */
 function bulkSaveStudentsAdmin(studentsList, adminUser) {
   try {
-    if (!studentsList || !studentsList.length) {
-      return apiResponse(false, null, "Data siswa massal kosong.");
+    if (!Array.isArray(studentsList) || studentsList.length === 0) {
+      return apiResponse(false, null, "Tidak ada data murid yang diproses.");
     }
 
     var ss = getDatabaseSpreadsheet();
-    if (!ss) {
-      initialSetup();
-      ss = getDatabaseSpreadsheet();
-    }
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
 
-    var sheet = ss.getSheetByName("DB_Siswa");
-    if (!sheet) {
-      setupSheetSiswa(ss);
-      sheet = ss.getSheetByName("DB_Siswa");
-    }
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var data = muridSheet.getDataRange().getValues();
 
-    var data = sheet.getDataRange().getValues();
-    var nisRowMap = {};
+    // Map existing NIS -> row index
+    var nisMap = {};
     for (var i = 1; i < data.length; i++) {
       var n = String(data[i][0]).trim();
-      if (n) nisRowMap[n] = i + 1;
+      if (n) nisMap[n] = i + 1;
     }
 
-    var newRows = [];
-    var updatedCount = 0;
-    var insertedCount = 0;
+    var inserted = 0;
+    var updated = 0;
 
-    for (var k = 0; k < studentsList.length; k++) {
-      var s = studentsList[k];
-      var sNis = String(s.nis || "").trim();
-      var sNama = String(s.namaSiswa || "").trim();
-      if (!sNis || !sNama) continue;
+    for (var s = 0; s < studentsList.length; s++) {
+      var st = studentsList[s];
+      if (!st.nis || !st.namaLengkap) continue;
+
+      var nis = String(st.nis).trim();
+      var pin = st.pin || "123456";
+      if (st.tanggalLahir && (!st.pin || st.pin === "")) {
+        var parts = String(st.tanggalLahir).split("-");
+        if (parts.length === 3) {
+          pin = parts[2] + parts[1] + parts[0].slice(-2);
+        }
+      }
 
       var rowValues = [
-        sNis,
-        String(s.nisn || ""),
-        sNama,
-        String(s.namaPanggilan || sNama.split(" ")[0]),
-        String(s.jenjang || "Playgroup (PG)"),
-        String(s.kelas || "PG-A"),
-        String(s.jenisKelamin || "Laki-laki"),
-        String(s.tanggalLahir || ""),
-        String(s.namaOrangtua || ""),
-        String(s.noWa || ""),
-        String(s.pinOrtu || "1234"),
-        String(s.status || "AKTIF")
+        nis,
+        st.namaLengkap,
+        st.namaPanggilan || st.namaLengkap,
+        st.jenisKelamin || "L",
+        st.jenjang || "TK-A",
+        st.idKelompok || "-",
+        st.tempatLahir || "",
+        st.tanggalLahir || "",
+        st.namaAyah || "",
+        st.namaIbu || "",
+        st.kontakOrtu || "",
+        st.status || "AKTIF",
+        st.alamat || "",
+        pin,
+        new Date()
       ];
 
-      if (nisRowMap[sNis]) {
-        sheet.getRange(nisRowMap[sNis], 1, 1, rowValues.length).setValues([rowValues]);
-        updatedCount++;
+      if (nisMap[nis]) {
+        muridSheet.getRange(nisMap[nis], 1, 1, rowValues.length).setValues([rowValues]);
+        updated++;
       } else {
-        newRows.push(rowValues);
-        nisRowMap[sNis] = true;
-        insertedCount++;
+        muridSheet.appendRow(rowValues);
+        inserted++;
       }
     }
 
-    if (newRows.length > 0) {
-      var startRow = sheet.getLastRow() + 1;
-      sheet.getRange(startRow, 1, newRows.length, newRows[0].length).setValues(newRows);
-    }
-
-    logActivity(adminUser || "ADMIN", "ADMIN", "BULK_IMPORT_SISWA", "Import massal siswa: " + insertedCount + " baru, " + updatedCount + " diperbarui.");
-    return apiResponse(true, { inserted: insertedCount, updated: updatedCount }, "Berhasil memproses " + (insertedCount + updatedCount) + " data siswa (" + insertedCount + " baru, " + updatedCount + " diperbarui)!");
-
+    logActivity(adminUser || "ADMIN", "ADMIN", "BULK IMPORT MURID", "Import massal murid: " + inserted + " baru, " + updated + " diperbarui.");
+    return apiResponse(true, { inserted: inserted, updated: updated }, "Berhasil memproses " + (inserted + updated) + " data murid (" + inserted + " baru, " + updated + " diupdate).");
   } catch (err) {
-    return apiResponse(false, null, "Gagal import massal: " + err.message);
+    return apiResponse(false, null, "Gagal import massal murid: " + err.message);
   }
 }
 
 /**
- * Hapus Data Siswa
+ * Hapus Data Murid
  */
 function deleteStudentAdmin(nis, adminUser) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Siswa");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var data = muridSheet.getDataRange().getValues();
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(nis).trim()) {
-        var studentName = data[i][2];
-        sheet.deleteRow(i + 1);
-        logActivity(adminUser || "ADMIN", "ADMIN", "DELETE_SISWA", "Menghapus siswa: " + studentName + " (" + nis + ")");
-        return apiResponse(true, null, "Siswa " + studentName + " berhasil dihapus.");
+        muridSheet.deleteRow(i + 1);
+        logActivity(adminUser || "ADMIN", "ADMIN", "HAPUS MURID", "Menghapus data murid NIS: " + nis);
+        return apiResponse(true, null, "Data murid berhasil dihapus.");
       }
     }
-    return apiResponse(false, null, "Siswa dengan NIS " + nis + " tidak ditemukan.");
+
+    return apiResponse(false, null, "Data murid tidak ditemukan.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menghapus murid: " + err.message);
   }
 }
 
 /**
- * Dapatkan Daftar Guru & Wali Kelas
+ * Mengambil daftar Guru, Kepala Sekolah, dan Staff
  */
 function getTeachersListAdmin() {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Users");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var usersSheet = ss.getSheetByName("DB_Users");
+    var data = usersSheet.getDataRange().getValues();
     var list = [];
 
+    // Header: [ID_User, Username, Password, Nama_Lengkap, Role, Kelompok_Diampu, Kontak_WA, Status, Timestamp]
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
       if (!row[0]) continue;
+
       list.push({
-        userId: String(row[0]),
-        username: String(row[1]),
-        password: String(row[2]),
-        namaLengkap: row[3],
-        role: row[4],
-        kelasDiampu: row[5],
-        noHp: String(row[6]),
-        status: row[7]
+        userId: String(row[0]).trim(),
+        username: String(row[1] || "").trim(),
+        password: String(row[2] || ""),
+        namaLengkap: String(row[3] || ""),
+        role: String(row[4] || "WALI_KELAS"),
+        kelompokDiampu: String(row[5] || ""),
+        kontakWa: String(row[6] || ""),
+        status: String(row[7] || "AKTIF")
       });
     }
 
-    return apiResponse(true, list);
+    return apiResponse(true, list, "Data pengguna/guru berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengambil data guru: " + err.message);
   }
 }
 
 /**
- * Simpan Data Guru/Pengguna
+ * Menyimpan / Update Data Guru, Kepala Sekolah, atau Admin
  */
 function saveTeacherAdmin(userObj, adminUser) {
   try {
+    if (!userObj || !userObj.username || !userObj.namaLengkap) {
+      return apiResponse(false, null, "Username dan Nama Lengkap wajib diisi.");
+    }
+
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Users");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var usersSheet = ss.getSheetByName("DB_Users");
+    var data = usersSheet.getDataRange().getValues();
     
-    var userId = String(userObj.userId || "").trim();
-    var username = String(userObj.username || "").trim().toLowerCase();
+    var username = String(userObj.username).trim().toLowerCase();
+    var rowIndex = -1;
 
-    if (!username) return apiResponse(false, null, "Username wajib diisi!");
-
-    var foundRow = -1;
     for (var i = 1; i < data.length; i++) {
-      if ((userId && String(data[i][0]).trim() === userId) || (String(data[i][1]).trim().toLowerCase() === username)) {
-        foundRow = i + 1;
-        userId = String(data[i][0]);
+      if (String(data[i][1]).trim().toLowerCase() === username) {
+        rowIndex = i + 1;
         break;
       }
     }
 
-    if (!userId) {
-      userId = "USR" + String(new Date().getTime()).slice(-4);
-    }
-
+    var userId = userObj.userId || ("USR-" + new Date().getTime().toString().slice(-6));
     var rowValues = [
       userId,
       username,
       userObj.password || "guru123",
       userObj.namaLengkap,
       userObj.role || "WALI_KELAS",
-      userObj.kelasDiampu || "",
-      String(userObj.noHp || ""),
-      userObj.status || "AKTIF"
+      userObj.kelompokDiampu || "-",
+      userObj.kontakWa || "",
+      userObj.status || "AKTIF",
+      new Date()
     ];
 
-    if (foundRow > 0) {
-      sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE_USER", "Memperbarui akun: " + userObj.namaLengkap + " (" + username + ")");
-      return apiResponse(true, null, "Akun " + userObj.namaLengkap + " berhasil diperbarui.");
+    if (rowIndex > 0) {
+      // Pertahankan password lama jika tidak diisi baru
+      if (!userObj.password || userObj.password.trim() === "") {
+        rowValues[2] = data[rowIndex - 1][2];
+      }
+      rowValues[0] = data[rowIndex - 1][0]; // Pertahankan User ID
+      usersSheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
+      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE USER", "Memperbarui akun " + userObj.role + ": " + username);
+      return apiResponse(true, userObj, "Data akun berhasil diperbarui.");
     } else {
-      sheet.appendRow(rowValues);
-      logActivity(adminUser || "ADMIN", "ADMIN", "CREATE_USER", "Menambahkan akun baru: " + userObj.namaLengkap + " (" + username + ")");
-      return apiResponse(true, null, "Akun baru " + userObj.namaLengkap + " berhasil dibuat.");
+      usersSheet.appendRow(rowValues);
+      logActivity(adminUser || "ADMIN", "ADMIN", "TAMBAH USER", "Menambahkan akun " + userObj.role + ": " + username);
+      return apiResponse(true, userObj, "Akun pengguna baru berhasil ditambahkan.");
     }
+
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menyimpan akun: " + err.message);
   }
 }
 
 /**
- * Dapatkan Daftar Rombongan Belajar (Kelas) Beserta Jumlah Siswa
+ * Mengambil daftar Data Kelompok Belajar (Rombel)
  */
 function getClassesListAdmin() {
   try {
     var ss = getDatabaseSpreadsheet();
-    if (!ss) {
-      initialSetup();
-      ss = getDatabaseSpreadsheet();
-    }
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
 
-    var sheet = ss.getSheetByName("DB_Kelas");
-    var siswaSheet = ss.getSheetByName("DB_Siswa");
-    var data = sheet.getDataRange().getValues();
-    var siswaData = siswaSheet.getDataRange().getValues();
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
 
-    // Hitung jumlah siswa per kelas
-    var countMap = {};
-    for (var s = 1; s < siswaData.length; s++) {
-      var sKelas = String(siswaData[s][5] || "").trim();
-      var sStatus = String(siswaData[s][11] || "AKTIF").trim().toUpperCase();
-      if (sKelas && sStatus === "AKTIF") {
-        countMap[sKelas] = (countMap[sKelas] || 0) + 1;
+    var kelompokData = kelompokSheet.getDataRange().getValues();
+    var muridData = muridSheet ? muridSheet.getDataRange().getValues() : [];
+
+    // Hitung jumlah murid per kelompok
+    var muridCountMap = {};
+    for (var m = 1; m < muridData.length; m++) {
+      var kId = String(muridData[m][5] || "").trim();
+      var st = String(muridData[m][11] || "AKTIF").toUpperCase();
+      if (kId && st === "AKTIF") {
+        muridCountMap[kId] = (muridCountMap[kId] || 0) + 1;
       }
     }
 
     var list = [];
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
+    // Header: [ID_Kelompok, Nama_Kelompok, Jenjang, ID_Wali_Kelas, Nama_Wali_Kelas, Kapasitas, Tahun_Ajaran, Status, Timestamp]
+    for (var i = 1; i < kelompokData.length; i++) {
+      var row = kelompokData[i];
       if (!row[0]) continue;
-      var idK = String(row[0]).trim();
+
+      var idKelompok = String(row[0]).trim();
       list.push({
-        idKelas: idK,
-        namaKelas: String(row[1] || ""),
+        idKelompok: idKelompok,
+        namaKelompok: String(row[1] || ""),
         jenjang: String(row[2] || ""),
         idWaliKelas: String(row[3] || ""),
         namaWaliKelas: String(row[4] || ""),
-        kapasitas: Number(row[5] || 20),
-        totalSiswa: countMap[idK] || 0
+        kapasitas: Number(row[5] || 15),
+        tahunAjaran: String(row[6] || ""),
+        status: String(row[7] || "AKTIF"),
+        jumlahMurid: muridCountMap[idKelompok] || 0
       });
     }
 
-    return apiResponse(true, list);
+    return apiResponse(true, list, "Data kelompok berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengambil data kelompok: " + err.message);
   }
 }
 
 /**
- * Tambah atau Perbarui Data Rombongan Belajar (Kelas)
- * dan Sinkronkan Penugasan Wali Kelas di DB_Users
+ * Menyimpan / Update Data Kelompok
  */
-function saveClassAdmin(classObj, adminUser) {
+function saveClassAdmin(kelompokObj, adminUser) {
   try {
-    var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Kelas");
-    var usersSheet = ss.getSheetByName("DB_Users");
-    var data = sheet.getDataRange().getValues();
-
-    var idKelas = String(classObj.idKelas || "").trim();
-    var namaKelas = String(classObj.namaKelas || "").trim();
-    var jenjang = String(classObj.jenjang || "").trim();
-    var idWaliKelas = String(classObj.idWaliKelas || "").trim();
-    var namaWaliKelas = String(classObj.namaWaliKelas || "").trim();
-    var kapasitas = Number(classObj.kapasitas || 20);
-
-    if (!idKelas || !namaKelas) {
-      return apiResponse(false, null, "Kode Kelas dan Nama Kelas wajib diisi!");
+    if (!kelompokObj || !kelompokObj.idKelompok || !kelompokObj.namaKelompok) {
+      return apiResponse(false, null, "ID Kelompok dan Nama Kelompok wajib diisi.");
     }
 
-    var foundRow = -1;
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
+    var data = kelompokSheet.getDataRange().getValues();
+    
+    var idKelompok = String(kelompokObj.idKelompok).trim().toUpperCase();
+    var rowIndex = -1;
+
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim().toUpperCase() === idKelas.toUpperCase()) {
-        foundRow = i + 1;
+      if (String(data[i][0]).trim().toUpperCase() === idKelompok) {
+        rowIndex = i + 1;
         break;
       }
     }
 
-    var rowValues = [idKelas, namaKelas, jenjang, idWaliKelas, namaWaliKelas, kapasitas];
+    var rowValues = [
+      idKelompok,
+      kelompokObj.namaKelompok,
+      kelompokObj.jenjang || "TK-A",
+      kelompokObj.idWaliKelas || "",
+      kelompokObj.namaWaliKelas || "",
+      Number(kelompokObj.kapasitas || 15),
+      kelompokObj.tahunAjaran || "2025/2026",
+      kelompokObj.status || "AKTIF",
+      new Date()
+    ];
 
-    if (foundRow > 0) {
-      sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE_KELAS", "Memperbarui kelas: " + namaKelas + " (" + idKelas + ")");
+    if (rowIndex > 0) {
+      kelompokSheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
+      logActivity(adminUser || "ADMIN", "ADMIN", "UPDATE KELOMPOK", "Memperbarui kelompok: " + idKelompok + " (" + kelompokObj.namaKelompok + ")");
+      return apiResponse(true, kelompokObj, "Data kelompok berhasil diperbarui.");
     } else {
-      sheet.appendRow(rowValues);
-      logActivity(adminUser || "ADMIN", "ADMIN", "CREATE_KELAS", "Menambahkan kelas baru: " + namaKelas + " (" + idKelas + ")");
+      kelompokSheet.appendRow(rowValues);
+      logActivity(adminUser || "ADMIN", "ADMIN", "TAMBAH KELOMPOK", "Menambahkan kelompok baru: " + idKelompok);
+      return apiResponse(true, kelompokObj, "Kelompok baru berhasil ditambahkan.");
     }
 
-    // Sinkronkan penugasan kelas pada akun Guru / Wali Kelas di DB_Users
-    if (idWaliKelas && usersSheet) {
-      var usersData = usersSheet.getDataRange().getValues();
-      for (var u = 1; u < usersData.length; u++) {
-        var uId = String(usersData[u][0]).trim();
-        if (uId === idWaliKelas) {
-          usersSheet.getRange(u + 1, 6).setValue(idKelas); // Set Kelas_Diampu
-          break;
-        }
-      }
-    }
-
-    return apiResponse(true, null, "Data kelas " + namaKelas + " berhasil disimpan!");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menyimpan kelompok: " + err.message);
   }
 }
 
 /**
- * Hapus Data Kelas
+ * Hapus Data Kelompok
  */
-function deleteClassAdmin(idKelas, adminUser) {
+function deleteClassAdmin(idKelompok, adminUser) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Kelas");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
+    var data = kelompokSheet.getDataRange().getValues();
 
     for (var i = 1; i < data.length; i++) {
-      if (String(data[i][0]).trim() === String(idKelas).trim()) {
-        var className = data[i][1];
-        sheet.deleteRow(i + 1);
-        logActivity(adminUser || "ADMIN", "ADMIN", "DELETE_KELAS", "Menghapus kelas: " + className + " (" + idKelas + ")");
-        return apiResponse(true, null, "Kelas " + className + " berhasil dihapus.");
+      if (String(data[i][0]).trim().toUpperCase() === String(idKelompok).trim().toUpperCase()) {
+        kelompokSheet.deleteRow(i + 1);
+        logActivity(adminUser || "ADMIN", "ADMIN", "HAPUS KELOMPOK", "Menghapus kelompok: " + idKelompok);
+        return apiResponse(true, null, "Data kelompok berhasil dihapus.");
       }
     }
-    return apiResponse(false, null, "Kelas tidak ditemukan.");
+
+    return apiResponse(false, null, "Data kelompok tidak ditemukan.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menghapus kelompok: " + err.message);
   }
 }
 
 /**
- * Ambil Detail Kelas Beserta Daftar Seluruh Murid di Dalamnya
+ * Mengambil daftar murid di dalam kelompok tertentu
  */
-function getClassStudentsAdmin(idKelas) {
+function getClassStudentsAdmin(idKelompok) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var siswaSheet = ss.getSheetByName("DB_Siswa");
-    var data = siswaSheet.getDataRange().getValues();
-    var students = [];
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var data = muridSheet.getDataRange().getValues();
+    var list = [];
 
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      if (!row[0]) continue;
-      var sKelas = String(row[5] || "").trim();
-
-      if (sKelas === idKelas) {
-        students.push({
+      if (String(row[5] || "").trim().toUpperCase() === String(idKelompok).trim().toUpperCase()) {
+        list.push({
           nis: String(row[0]),
-          nisn: String(row[1] || ""),
-          namaSiswa: String(row[2] || ""),
-          panggilan: String(row[3] || ""),
-          jenjang: String(row[4] || ""),
-          kelas: sKelas,
-          jenisKelamin: String(row[6] || ""),
-          namaOrangtua: String(row[8] || ""),
-          noWa: String(row[9] || ""),
-          pinOrtu: String(row[10] || "1234"),
+          namaLengkap: String(row[1]),
+          panggilan: String(row[2] || row[1]),
+          jenisKelamin: String(row[3]),
+          jenjang: String(row[4]),
           status: String(row[11] || "AKTIF")
         });
       }
     }
 
-    return apiResponse(true, students);
+    return apiResponse(true, list, "Data anggota kelompok berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal memuat anggota kelompok: " + err.message);
   }
 }
 
 /**
- * Dapatkan Daftar Tahun Ajaran
+ * Mengambil daftar Tahun Pelajaran
  */
 function getAcademicYearsListAdmin() {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_TahunAjaran");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var taSheet = ss.getSheetByName("DB_TahunAjaran");
+    var data = taSheet.getDataRange().getValues();
     var list = [];
 
     for (var i = 1; i < data.length; i++) {
@@ -551,96 +606,78 @@ function getAcademicYearsListAdmin() {
       if (!row[0]) continue;
       list.push({
         idTahun: String(row[0]),
-        tahunAjaran: row[1],
-        semester: row[2],
-        statusAktif: row[3],
-        aksesRaportOrtu: row[4]
+        namaTahun: String(row[1]),
+        semester: String(row[2]),
+        statusAktif: String(row[3]),
+        statusAksesOrtu: String(row[4])
       });
     }
 
-    return apiResponse(true, list);
+    return apiResponse(true, list, "Data tahun pelajaran berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengambil data tahun pelajaran: " + err.message);
   }
 }
 
 /**
- * Set Tahun Ajaran Aktif & Toggle Akses Publikasi Ortu
+ * Mengatur Tahun Pelajaran Aktif & Status Akses Wali Murid
  */
 function setAcademicYearSettingsAdmin(idTahun, statusAktif, aksesOrtu, adminUser) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_TahunAjaran");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var taSheet = ss.getSheetByName("DB_TahunAjaran");
+    var data = taSheet.getDataRange().getValues();
 
     for (var i = 1; i < data.length; i++) {
-      var currentId = String(data[i][0]).trim();
-      if (statusAktif === "AKTIF") {
-        // Jika diset aktif, nonaktifkan baris lainnya
-        sheet.getRange(i + 1, 4).setValue(currentId === idTahun ? "AKTIF" : "NONAKTIF");
-      }
-      if (currentId === idTahun && aksesOrtu) {
-        sheet.getRange(i + 1, 5).setValue(aksesOrtu);
+      var curId = String(data[i][0]).trim();
+      if (curId === String(idTahun).trim()) {
+        if (statusAktif) taSheet.getRange(i + 1, 4).setValue("AKTIF");
+        if (aksesOrtu) taSheet.getRange(i + 1, 5).setValue(aksesOrtu);
+      } else if (statusAktif === "AKTIF") {
+        // Matikan tahun ajaran lain jika yang ini diaktifkan
+        taSheet.getRange(i + 1, 4).setValue("NONAKTIF");
       }
     }
 
-    logActivity(adminUser || "ADMIN", "ADMIN", "CONFIG_TA", "Mengubah pengaturan Tahun Ajaran ID: " + idTahun);
-    return apiResponse(true, null, "Pengaturan Tahun Pelajaran berhasil diperbarui.");
+    logActivity(adminUser || "ADMIN", "ADMIN", "PENGATURAN TA", "Mengubah pengaturan tahun ajaran: " + idTahun);
+    return apiResponse(true, null, "Pengaturan tahun pelajaran dan publikasi berhasil diperbarui.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengubah pengaturan: " + err.message);
   }
 }
 
 /**
- * Mengubah Status Publikasi Raport Secara Massal (Publish / Unpublish)
- */
-function toggleReportPublishStatus(reportIds, statusPublish, adminUser) {
-  try {
-    var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Raport");
-    var data = sheet.getDataRange().getValues();
-    var count = 0;
-
-    for (var i = 1; i < data.length; i++) {
-      var rId = String(data[i][0]).trim();
-      if (reportIds.indexOf(rId) !== -1) {
-        sheet.getRange(i + 1, 12).setValue(statusPublish);
-        count++;
-      }
-    }
-
-    logActivity(adminUser || "ADMIN", "ADMIN", "PUBLISH_RAPORT", "Mengubah status " + count + " raport menjadi " + statusPublish);
-    return apiResponse(true, count, count + " Raport berhasil diubah statusnya menjadi " + statusPublish);
-  } catch (err) {
-    return apiResponse(false, null, err.message);
-  }
-}
-
-/**
- * Mengambil Riwayat Log Aktivitas
+ * Mengambil Log Aktivitas Sistem
  */
 function getActivityLogsAdmin(limit) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_LogAktivitas");
-    var data = sheet.getDataRange().getValues();
-    var logs = [];
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
 
-    var start = Math.max(1, data.length - (limit || 50));
-    for (var i = data.length - 1; i >= start; i--) {
+    var logSheet = ss.getSheetByName("DB_LogAktivitas");
+    if (!logSheet) return apiResponse(true, [], "Belum ada log.");
+
+    var data = logSheet.getDataRange().getValues();
+    var list = [];
+    var max = limit || 50;
+
+    for (var i = data.length - 1; i >= 1 && list.length < max; i--) {
       var row = data[i];
       if (!row[0]) continue;
-      logs.push({
-        waktu: Utilities.formatDate(new Date(row[0]), "GMT+7", "dd/MM/yyyy HH:mm:ss"),
-        user: row[1],
-        role: row[2],
-        aksi: row[3],
-        keterangan: row[4]
+      var tglStr = row[0] instanceof Date ? Utilities.formatDate(row[0], "GMT+7", "dd/MM/yyyy HH:mm:ss") : String(row[0]);
+      list.push({
+        timestamp: tglStr,
+        user: String(row[1] || "-"),
+        role: String(row[2] || "-"),
+        aktivitas: String(row[3] || "-"),
+        detail: String(row[4] || "-")
       });
     }
 
-    return apiResponse(true, logs);
+    return apiResponse(true, list, "Log aktivitas berhasil dimuat.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal memuat log: " + err.message);
   }
 }

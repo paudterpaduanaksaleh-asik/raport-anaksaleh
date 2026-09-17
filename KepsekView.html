@@ -1,0 +1,173 @@
+<!-- ==========================================
+     PORTAL KEPALA SEKOLAH (REVIEW & ACC RAPORT)
+     ========================================== -->
+<div id="kepsekDashboard" class="hidden space-y-6">
+
+  <!-- Header & Welcome Banner -->
+  <div class="bg-gradient-to-r from-purple-800 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-purple-500/20 rounded-full blur-2xl pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/30 text-purple-200 text-xs font-bold mb-3 border border-purple-400/30 backdrop-blur-md">
+          <i class="fas fa-user-tie"></i> Portal Eksekutif Kepala Sekolah
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black font-brand">Peninjauan & Persetujuan Raport</h2>
+        <p class="text-sm text-purple-100/90 mt-1 max-w-xl">
+          Tinjau berkas raport dari seluruh Wali Kelas. Berikan catatan perbaikan bila perlu revisi, atau setujui (ACC) agar langsung terbit ke Wali Murid.
+        </p>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-3">
+        <button onclick="loadKepsekData()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl text-xs font-bold backdrop-blur-md transition flex items-center gap-2">
+          <i class="fas fa-sync-alt" id="refreshKepsekIcon"></i> Refresh Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistik Pengajuan Raport -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Murid -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-child"></i>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-slate-500">Total Murid</div>
+        <div id="statKepsekTotalMurid" class="text-2xl font-black text-slate-800">0</div>
+      </div>
+    </div>
+
+    <!-- Menunggu Review (Pill Highlight) -->
+    <div class="bg-white p-5 rounded-2xl border-2 border-sky-300 bg-sky-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-hourglass-half"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-sky-700">Perlu Review (Diajukan)</div>
+        <div id="statKepsekDiajukan" class="text-2xl font-black text-sky-700">0</div>
+      </div>
+    </div>
+
+    <!-- Perlu Revisi -->
+    <div class="bg-white p-5 rounded-2xl border border-rose-200 bg-rose-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-rose-700">Dalam Revisi Guru</div>
+        <div id="statKepsekRevisi" class="text-2xl font-black text-rose-700">0</div>
+      </div>
+    </div>
+
+    <!-- Disetujui (ACC) -->
+    <div class="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-check-double"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-emerald-700">Disetujui & Terbit (ACC)</div>
+        <div id="statKepsekDisetujui" class="text-2xl font-black text-emerald-700">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Kontrol Tabel Review -->
+  <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+      <div>
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fas fa-clipboard-check text-purple-600"></i> Antrean Berkas Raport Masuk
+        </h3>
+        <p class="text-xs text-slate-500">Klik "Pratinjau PDF" untuk membaca raport, lalu pilih ACC atau Revisi.</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Filter Kelompok -->
+        <select id="filterKepsekKelompok" onchange="filterKepsekTable()" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-purple-500 text-slate-700">
+          <option value="SEMUA">Semua Kelompok</option>
+        </select>
+
+        <!-- Filter Status -->
+        <select id="filterKepsekStatus" onchange="filterKepsekTable()" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-purple-500 text-slate-700">
+          <option value="SEMUA">Semua Status</option>
+          <option value="DIAJUKAN" selected>⏳ Menunggu Review (Diajukan)</option>
+          <option value="REVISI">⚠️ Perlu Revisi</option>
+          <option value="DISETUJUI">✅ Disetujui (ACC)</option>
+          <option value="DRAF">📝 Draf Guru</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabel Daftar Raport untuk Review -->
+    <div class="overflow-x-auto rounded-2xl border border-slate-100">
+      <table class="w-full text-left text-xs text-slate-700">
+        <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+          <tr>
+            <th class="p-3.5">NIS & Nama Murid</th>
+            <th class="p-3.5">Kelompok & Wali Kelas</th>
+            <th class="p-3.5">Catatan Perkembangan</th>
+            <th class="p-3.5 text-center">Status Review</th>
+            <th class="p-3.5 text-center">Aksi Kepala Sekolah</th>
+          </tr>
+        </thead>
+        <tbody id="kepsekReportsTableBody" class="divide-y divide-slate-100 font-medium">
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-400">
+              <i class="fas fa-spinner fa-spin text-2xl text-purple-600 mb-2"></i>
+              <p>Memuat antrean raport...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL: BERIKAN CATATAN REVISI KEPALA SEKOLAH
+     ========================================== -->
+<div id="modalRevisiKepsek" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-100 animate-scale-up">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold">
+          <i class="fas fa-edit"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Catatan Revisi Raport</h3>
+          <p class="text-xs text-slate-500" id="revisiModalSubtitle">Murid: -</p>
+        </div>
+      </div>
+      <button onclick="closeRevisiModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form id="formRevisiKepsek" onsubmit="handleRejectSubmit(event)" class="space-y-4">
+      <input type="hidden" id="revisiReportId" value="">
+      
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1.5">
+          Tuliskan Catatan & Bagian yang Perlu Diperbaiki oleh Guru: <span class="text-rose-500">*</span>
+        </label>
+        <textarea id="revisiNotesInput" rows="4" required class="w-full text-xs p-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-rose-500 focus:border-rose-500" placeholder="Contoh: Mohon perbaiki penulisan narasi kemandirian anak pada halaman 2 dan unggah ulang berkas PDF yang telah diperbaiki."></textarea>
+      </div>
+
+      <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800 text-xs flex items-start gap-2.5">
+        <i class="fas fa-info-circle text-amber-600 mt-0.5"></i>
+        <span>Status raport akan berubah menjadi <b>REVISI</b> dan notifikasi beserta catatan ini akan langsung tampil di akun Wali Kelas terkait.</span>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" onclick="closeRevisiModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+        <button type="submit" id="btnSubmitRevisi" class="px-5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5">
+          <i class="fas fa-paper-plane mr-1"></i> Kirim Catatan Revisi ke Guru
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

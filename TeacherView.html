@@ -1,86 +1,163 @@
 <!-- ==========================================
-     TEACHER / WALI KELAS DASHBOARD VIEW
+     PORTAL WALI KELAS / GURU
      ========================================== -->
-<div id="teacherView" class="hidden space-y-6">
-  <!-- Teacher Header Banner -->
-  <div class="bg-gradient-to-r from-sky-600 via-teal-600 to-emerald-600 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
-    <div class="absolute -right-6 -bottom-6 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+<div id="teacherDashboard" class="hidden space-y-6">
+
+  <!-- Header Card & Kelompok Info -->
+  <div class="bg-gradient-to-r from-teal-700 via-emerald-700 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute -right-8 -bottom-8 w-44 h-44 bg-teal-400/20 rounded-full blur-2xl pointer-events-none"></div>
     <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div>
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-xs font-semibold tracking-wide backdrop-blur-sm mb-2">
-          <i class="fas fa-chalkboard-teacher text-amber-300"></i> Ruang Kerja Wali Kelas
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/30 text-teal-200 text-xs font-bold mb-3 border border-teal-400/30 backdrop-blur-md">
+          <i class="fas fa-chalkboard-teacher"></i> Portal Wali Kelas
         </div>
-        <h2 id="teacherClassTitle" class="text-2xl md:text-3xl font-extrabold font-brand">Kelas ...</h2>
-        <p id="teacherWelcomeSub" class="text-sky-100 text-sm mt-1">Selamat datang, Ustadz/Ustadzah. Silakan kelola berkas raport siswa.</p>
+        <h2 id="teacherKelompokName" class="text-2xl sm:text-3xl font-black font-brand">Kelompok -</h2>
+        <p class="text-sm text-teal-100/90 mt-1 max-w-xl">
+          Kelola data perkembangan dan unggah berkas raport PDF murid. Raport yang diajukan akan ditinjau oleh Kepala Sekolah sebelum diterbitkan ke Orang Tua.
+        </p>
       </div>
-      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/20 text-center md:text-right">
-        <p class="text-xs text-sky-200">Tahun Pelajaran Aktif</p>
-        <p id="teacherActiveTA" class="text-base font-bold text-white mt-0.5">...</p>
-      </div>
-    </div>
 
-    <!-- Teacher Class Stats Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/20">
-      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
-        <p class="text-xs text-sky-200">Total Siswa</p>
-        <p id="teacherStatTotal" class="text-xl font-bold mt-0.5">0</p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
-        <p class="text-xs text-emerald-200">Raport Diunggah</p>
-        <p id="teacherStatUploaded" class="text-xl font-bold mt-0.5">0</p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
-        <p class="text-xs text-amber-200">Belum Diunggah</p>
-        <p id="teacherStatPending" class="text-xl font-bold mt-0.5">0</p>
-      </div>
-      <div class="bg-white/10 backdrop-blur-md rounded-xl p-3 text-center">
-        <p class="text-xs text-teal-200">Dilihat Orang Tua</p>
-        <p id="teacherStatViewed" class="text-xl font-bold mt-0.5">0</p>
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-3">
+        <button onclick="loadTeacherData()" class="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-2xl text-xs font-bold backdrop-blur-md transition flex items-center gap-2">
+          <i class="fas fa-sync-alt" id="refreshTeacherIcon"></i> Refresh Data
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Main Class Student Table Card -->
-  <div class="glass-card rounded-2xl p-5">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-      <div>
-        <h3 class="font-bold text-lg text-slate-800">Daftar Siswa & Berkas Raport</h3>
-        <p class="text-xs text-slate-500">Unggah berkas PDF raport serta catatan perkembangan untuk setiap ananda.</p>
+  <!-- NOTIFIKASI KHUSUS JIKA ADA RAPORT DENGAN STATUS REVISI DARI KEPALA SEKOLAH -->
+  <div id="teacherRevisionAlertBanner" class="hidden bg-rose-50 border-2 border-rose-300 p-4 sm:p-5 rounded-3xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-pulse">
+    <div class="flex items-center gap-3.5">
+      <div class="w-10 h-10 rounded-2xl bg-rose-500 text-white flex items-center justify-center text-lg font-bold flex-shrink-0">
+        <i class="fas fa-exclamation-triangle"></i>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <input type="text" id="teacherSearchInput" onkeyup="filterTeacherTable()" placeholder="Cari nama / NIS..." class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:outline-none w-48">
-        <select id="teacherStatusFilter" onchange="filterTeacherTable()" class="px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-sky-500">
-          <option value="ALL">Semua Status</option>
-          <option value="UPLOADED">Sudah Diunggah</option>
-          <option value="PENDING">Belum Diunggah</option>
-        </select>
-        <button onclick="loadTeacherClassData()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-medium transition flex items-center gap-1.5">
-          <i class="fas fa-sync-alt"></i> Refresh
-        </button>
+      <div>
+        <h4 class="font-black text-rose-800 text-sm sm:text-base">Perhatian: Ada Catatan Revisi dari Kepala Sekolah!</h4>
+        <p class="text-xs text-rose-700 mt-0.5" id="teacherRevisionAlertText">
+          Terdapat raport yang dikembalikan oleh Kepala Sekolah untuk diperbaiki. Silakan cek tombol "Lihat Catatan & Upload Revisi" di bawah.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistik Kelompok -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Murid -->
+    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-users"></i>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-slate-500">Total Murid</div>
+        <div id="statTeacherTotalMurid" class="text-2xl font-black text-slate-800">0</div>
       </div>
     </div>
 
-    <!-- Student List Table -->
-    <div class="overflow-x-auto rounded-xl border border-slate-200">
-      <table class="w-full text-left border-collapse text-sm">
-        <thead>
-          <tr class="bg-slate-100/80 text-slate-700 uppercase text-xs font-semibold">
-            <th class="p-3">NIS</th>
-            <th class="p-3">Nama Siswa</th>
-            <th class="p-3">Orang Tua</th>
-            <th class="p-3 text-center">Status Raport</th>
-            <th class="p-3 text-center">Waktu Akses Ortu</th>
-            <th class="p-3 text-center">Aksi Raport</th>
+    <!-- Menunggu Review Kepsek -->
+    <div class="bg-white p-5 rounded-2xl border border-sky-200 bg-sky-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-paper-plane"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-sky-700">Diajukan ke Kepsek</div>
+        <div id="statTeacherDiajukan" class="text-2xl font-black text-sky-700">0</div>
+      </div>
+    </div>
+
+    <!-- Perlu Revisi -->
+    <div class="bg-white p-5 rounded-2xl border border-rose-200 bg-rose-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-undo-alt"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-rose-700">Perlu Revisi</div>
+        <div id="statTeacherRevisi" class="text-2xl font-black text-rose-700">0</div>
+      </div>
+    </div>
+
+    <!-- Disetujui (ACC) -->
+    <div class="bg-white p-5 rounded-2xl border border-emerald-200 bg-emerald-50/30 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div>
+        <div class="text-xs font-bold text-emerald-700">Disetujui / Terbit</div>
+        <div id="statTeacherDisetujui" class="text-2xl font-black text-emerald-700">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabel Data Murid & Raport Kelompok -->
+  <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+      <div>
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fas fa-child text-teal-600"></i> Daftar Murid Kelompok & Status Berkas Raport
+        </h3>
+        <p class="text-xs text-slate-500">Unggah berkas PDF dan catatan narasi anak untuk diajukan ke Kepala Sekolah.</p>
+      </div>
+    </div>
+
+    <!-- Tabel Daftar Murid -->
+    <div class="overflow-x-auto rounded-2xl border border-slate-100">
+      <table class="w-full text-left text-xs text-slate-700">
+        <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+          <tr>
+            <th class="p-3.5">NIS & Nama Murid</th>
+            <th class="p-3.5">Nama Orang Tua & Kontak</th>
+            <th class="p-3.5 text-center">Status Raport</th>
+            <th class="p-3.5">Catatan / Status Review</th>
+            <th class="p-3.5 text-center">Aksi Guru</th>
           </tr>
         </thead>
-        <tbody id="teacherStudentsTableBody" class="divide-y divide-slate-200">
+        <tbody id="teacherStudentsTableBody" class="divide-y divide-slate-100 font-medium">
           <tr>
-            <td colspan="6" class="p-6 text-center text-slate-400">
-              <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data siswa kelas...
+            <td colspan="5" class="p-8 text-center text-slate-400">
+              <i class="fas fa-spinner fa-spin text-2xl text-teal-600 mb-2"></i>
+              <p>Memuat daftar murid kelompok...</p>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==========================================
+     MODAL: DETAIL CATATAN REVISI KEPALA SEKOLAH
+     ========================================== -->
+<div id="modalDetailRevisi" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 border border-rose-100 animate-scale-up">
+    <div class="flex items-center justify-between pb-3 border-b border-rose-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold">
+          <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">Catatan Evaluasi Kepala Sekolah</h3>
+          <p class="text-xs text-slate-500" id="detailRevisiMuridName">Murid: -</p>
+        </div>
+      </div>
+      <button onclick="closeDetailRevisiModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Isi Catatan Evaluasi -->
+    <div class="p-4 bg-rose-50/60 rounded-2xl border border-rose-200 space-y-2">
+      <div class="text-[11px] font-bold text-rose-700 uppercase tracking-wider">Catatan Perbaikan dari Kepala Sekolah:</div>
+      <p id="detailRevisiTextContent" class="text-xs text-slate-700 leading-relaxed italic bg-white p-3.5 rounded-xl border border-rose-100">
+        -
+      </p>
+    </div>
+
+    <div class="pt-2 flex justify-end gap-2">
+      <button type="button" onclick="closeDetailRevisiModal()" class="px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Tutup</button>
+      <button type="button" id="btnGoUploadRevisi" class="px-5 py-2.5 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-bold text-xs rounded-xl shadow-lg transition flex items-center gap-1.5">
+        <i class="fas fa-cloud-upload-alt mr-1"></i> Unggah Raport Perbaikan
+      </button>
     </div>
   </div>
 </div>

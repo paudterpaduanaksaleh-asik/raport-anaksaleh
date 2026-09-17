@@ -11,14 +11,14 @@
           <i class="fas fa-shield-alt text-amber-300"></i> Portal Administrator
         </div>
         <h2 class="text-2xl md:text-3xl font-extrabold font-brand">Panel Kontrol Raport Digital</h2>
-        <p class="text-teal-100 text-sm mt-1">Kelola data master siswa, wali kelas, tahun pelajaran, dan hak akses publikasi raport.</p>
+        <p class="text-teal-100 text-sm mt-1">Kelola data master murid, guru & kepala sekolah, kelompok belajar, dan kontrol hak akses.</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <button onclick="loadAdminDashboardData()" class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-sm font-medium transition flex items-center gap-2 backdrop-blur-sm">
           <i class="fas fa-sync-alt"></i> Refresh Data
         </button>
-        <button onclick="runResetDatabaseForSimulation()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-1.5" title="Kosongkan seluruh data siswa, guru, kelas, dan raport untuk memulai simulasi baru">
-          <i class="fas fa-trash-restore"></i> Kosongkan Data
+        <button onclick="runResetDatabaseForSimulation()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-1.5" title="Kosongkan seluruh data untuk memulai simulasi baru">
+          <i class="fas fa-trash-restore"></i> Reset Simulasi
         </button>
         <button onclick="runDatabaseSetup()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-2">
           <i class="fas fa-magic"></i> Auto-Setup Database
@@ -29,14 +29,14 @@
     <!-- Summary Widgets Grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/20">
       <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-        <p class="text-xs text-teal-200 font-medium">Total Siswa Aktif</p>
+        <p class="text-xs text-teal-200 font-medium">Total Murid Aktif</p>
         <p id="statTotalSiswa" class="text-2xl font-bold mt-1">...</p>
         <div id="statJenjangBreakdown" class="text-[11px] text-teal-100/80 mt-1 truncate">Memuat...</div>
       </div>
       <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-        <p class="text-xs text-teal-200 font-medium">Wali Kelas / Guru</p>
+        <p class="text-xs text-teal-200 font-medium">Guru & Kepala Sekolah</p>
         <p id="statTotalGuru" class="text-2xl font-bold mt-1">...</p>
-        <p id="statTotalKelas" class="text-[11px] text-teal-100/80 mt-1">... Rombel Kelas</p>
+        <p id="statTotalKelas" class="text-[11px] text-teal-100/80 mt-1">... Kelompok Belajar</p>
       </div>
       <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
         <p class="text-xs text-teal-200 font-medium">Tahun Ajaran Aktif</p>
@@ -44,9 +44,9 @@
         <p id="statStatusAksesOrtu" class="text-[11px] text-amber-300 font-semibold mt-1">Akses Ortu: ...</p>
       </div>
       <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-        <p class="text-xs text-teal-200 font-medium">Progres Raport Terunggah</p>
+        <p class="text-xs text-teal-200 font-medium">Status Raport Digital</p>
         <p id="statRaportUploaded" class="text-2xl font-bold mt-1">...</p>
-        <p id="statRaportDilihat" class="text-[11px] text-teal-100/80 mt-1">... sudah dilihat orang tua</p>
+        <p id="statRaportDilihat" class="text-[11px] text-teal-100/80 mt-1">Diajukan / ACC Kepsek</p>
       </div>
     </div>
   </div>
@@ -54,13 +54,13 @@
   <!-- Admin Sub Navigation Tabs -->
   <div class="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
     <button onclick="switchAdminTab('siswa')" id="adminTabBtn_siswa" class="admin-tab-btn px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-teal-600 text-white shadow-sm">
-      <i class="fas fa-user-graduate"></i> Data Siswa
+      <i class="fas fa-user-graduate"></i> Data Murid
     </button>
     <button onclick="switchAdminTab('guru')" id="adminTabBtn_guru" class="admin-tab-btn px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-white text-slate-600 hover:bg-slate-50">
-      <i class="fas fa-chalkboard-teacher"></i> Wali Kelas
+      <i class="fas fa-chalkboard-teacher"></i> Data Guru & Kepsek
     </button>
     <button onclick="switchAdminTab('kelas')" id="adminTabBtn_kelas" class="admin-tab-btn px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-white text-slate-600 hover:bg-slate-50">
-      <i class="fas fa-school"></i> Kelas & Rombel
+      <i class="fas fa-school"></i> Data Kelompok
     </button>
     <button onclick="switchAdminTab('tahun')" id="adminTabBtn_tahun" class="admin-tab-btn px-4 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 bg-white text-slate-600 hover:bg-slate-50">
       <i class="fas fa-calendar-alt"></i> Tahun Pelajaran & Akses
@@ -70,16 +70,16 @@
     </button>
   </div>
 
-  <!-- TAB 1: DATA SISWA -->
+  <!-- TAB 1: DATA MURID -->
   <div id="adminTabContent_siswa" class="admin-tab-content space-y-4">
     <div class="glass-card rounded-2xl p-5">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
-          <h3 class="font-bold text-lg text-slate-800">Master Data Siswa</h3>
+          <h3 class="font-bold text-lg text-slate-800">Master Data Murid</h3>
           <p class="text-xs text-slate-500">Kelola informasi murid PG, TK-A, TK-B, dan Daycare Anak Saleh.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <input type="text" id="searchSiswaInput" onkeyup="filterSiswaTable()" placeholder="Cari NIS / Nama Siswa..." class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none w-48">
+          <input type="text" id="searchSiswaInput" onkeyup="filterSiswaTable()" placeholder="Cari NIS / Nama Murid..." class="px-3.5 py-2 text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none w-48">
           <select id="filterJenjangSelect" onchange="loadAdminStudents()" class="px-3 py-2 text-sm border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-teal-500">
             <option value="SEMUA">Semua Jenjang</option>
             <option value="Playgroup (PG)">Playgroup (PG)</option>
@@ -87,19 +87,19 @@
             <option value="TK-B">TK-B</option>
             <option value="Daycare">Daycare</option>
           </select>
-          <button onclick="downloadStudentTemplateCsv()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition flex items-center gap-1.5" title="Unduh format template Excel/CSV untuk pengisian massal">
+          <button onclick="downloadStudentTemplateCsv()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition flex items-center gap-1.5" title="Unduh format template CSV untuk pengisian massal">
             <i class="fas fa-file-excel text-emerald-600"></i> Unduh Template
           </button>
-          <button onclick="openModalBulkUpload()" class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5" title="Upload data siswa massal">
+          <button onclick="openModalBulkUpload()" class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5" title="Upload data murid massal">
             <i class="fas fa-file-import"></i> Upload Massal
           </button>
           <button onclick="openModalAddStudent()" class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center gap-1.5">
-            <i class="fas fa-user-plus"></i> + Tambah Siswa
+            <i class="fas fa-user-plus"></i> + Tambah Murid
           </button>
         </div>
       </div>
 
-      <!-- Table Siswa -->
+      <!-- Table Murid -->
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-left border-collapse text-sm">
           <thead>
@@ -107,7 +107,7 @@
               <th class="p-3">NIS</th>
               <th class="p-3">Nama Lengkap</th>
               <th class="p-3">Jenjang</th>
-              <th class="p-3">Kelas</th>
+              <th class="p-3">Kelompok</th>
               <th class="p-3">Orang Tua / No WA</th>
               <th class="p-3">PIN Ortu</th>
               <th class="p-3 text-center">Status</th>
@@ -117,7 +117,7 @@
           <tbody id="adminSiswaTableBody" class="divide-y divide-slate-200">
             <tr>
               <td colspan="8" class="p-6 text-center text-slate-400">
-                <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data siswa...
+                <i class="fas fa-spinner fa-spin mr-2"></i> Memuat data murid...
               </td>
             </tr>
           </tbody>
@@ -126,16 +126,16 @@
     </div>
   </div>
 
-  <!-- TAB 2: DATA GURU / WALI KELAS -->
+  <!-- TAB 2: DATA GURU & KEPALA SEKOLAH -->
   <div id="adminTabContent_guru" class="admin-tab-content hidden space-y-4">
     <div class="glass-card rounded-2xl p-5">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
         <div>
-          <h3 class="font-bold text-lg text-slate-800">Daftar Wali Kelas & Guru</h3>
-          <p class="text-xs text-slate-500">Penugasan hak akses wali kelas untuk mengunggah raport.</p>
+          <h3 class="font-bold text-lg text-slate-800">Daftar Guru, Wali Kelas & Kepala Sekolah</h3>
+          <p class="text-xs text-slate-500">Kelola akun dan penugasan hak akses pengguna portal.</p>
         </div>
         <button onclick="openModalAddTeacher()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-2">
-          <i class="fas fa-plus-circle"></i> Tambah Wali Kelas
+          <i class="fas fa-plus-circle"></i> Tambah Pengguna Baru
         </button>
       </div>
 
@@ -147,15 +147,15 @@
               <th class="p-3">Nama Lengkap</th>
               <th class="p-3">Username</th>
               <th class="p-3">Role</th>
-              <th class="p-3">Kelas Diampu</th>
-              <th class="p-3">Kontak / HP</th>
+              <th class="p-3">Kelompok Diampu</th>
+              <th class="p-3">Kontak / WA</th>
               <th class="p-3 text-center">Status</th>
               <th class="p-3 text-center">Aksi</th>
             </tr>
           </thead>
           <tbody id="adminGuruTableBody" class="divide-y divide-slate-200">
             <tr>
-              <td colspan="8" class="p-6 text-center text-slate-400">Memuat data guru...</td>
+              <td colspan="8" class="p-6 text-center text-slate-400">Memuat data guru & pengguna...</td>
             </tr>
           </tbody>
         </table>
@@ -163,23 +163,23 @@
     </div>
   </div>
 
-  <!-- TAB 3: DATA KELAS & ROMBEL -->
+  <!-- TAB 3: DATA KELOMPOK -->
   <div id="adminTabContent_kelas" class="admin-tab-content hidden space-y-4">
     <div class="glass-card rounded-2xl p-5">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div>
-          <h3 class="font-bold text-lg text-slate-800">Rombongan Belajar (Kelas) & Penugasan</h3>
-          <p class="text-xs text-slate-500">Kelola kelas, tugaskan wali kelas, dan tambahkan murid langsung ke dalam kelas.</p>
+          <h3 class="font-bold text-lg text-slate-800">Data Kelompok Belajar & Penugasan Wali Kelas</h3>
+          <p class="text-xs text-slate-500">Kelola kelompok, tugaskan wali kelas, dan pantau jumlah murid terdaftar.</p>
         </div>
         <div class="flex items-center gap-2">
           <button onclick="openModalAddClass()" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-semibold shadow-md transition flex items-center gap-2">
-            <i class="fas fa-plus-circle"></i> Tambah Kelas Baru
+            <i class="fas fa-plus-circle"></i> Tambah Kelompok Baru
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="adminKelasGrid">
-        <!-- Dynamic Cards -->
+        <!-- Dynamic Kelompok Cards -->
       </div>
     </div>
   </div>
@@ -201,7 +201,7 @@
               <th class="p-3">Tahun Ajaran</th>
               <th class="p-3">Semester</th>
               <th class="p-3 text-center">Status Semester</th>
-              <th class="p-3 text-center">Akses Raport Orang Tua</th>
+              <th class="p-3 text-center">Akses Raport Wali Murid</th>
               <th class="p-3 text-center">Aksi Pengaturan</th>
             </tr>
           </thead>
@@ -221,7 +221,7 @@
       <div class="flex items-center justify-between gap-3 mb-4">
         <div>
           <h3 class="font-bold text-lg text-slate-800">Audit Jejak Aktivitas Sistem</h3>
-          <p class="text-xs text-slate-500">Riwayat upload raport, perubahan data, dan login pengguna.</p>
+          <p class="text-xs text-slate-500">Riwayat upload raport, persetujuan Kepala Sekolah, dan login pengguna.</p>
         </div>
         <button onclick="loadAdminLogs()" class="text-xs px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg">
           <i class="fas fa-sync-alt mr-1"></i> Refresh Log

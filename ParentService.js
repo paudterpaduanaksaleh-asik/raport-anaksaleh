@@ -1,149 +1,176 @@
 /**
  * ============================================================================
- * MODUL ORANG TUA (PORTAL AKSES RAPORT & KONFIRMASI)
+ * MODUL WALI MURID (PORTAL RAPORT & PERKEMBANGAN ANAK)
+ * PG - TK - DAYCARE ANAK SALEH
  * ============================================================================
  */
 
 /**
- * Mendapatkan Data Profil Siswa dan Daftar Raport yang Sudah Terbit
+ * Mengambil data profil murid dan daftar raport yang SUDAH DI-ACC (DISETUJUI) KEPALA SEKOLAH
+ * @param {string} nis NIS Murid
  */
 function getParentStudentReports(nis) {
   try {
     if (!nis) return apiResponse(false, null, "NIS tidak valid.");
 
     var ss = getDatabaseSpreadsheet();
-    if (!ss) {
-      initialSetup();
-      ss = getDatabaseSpreadsheet();
-    }
     if (!ss) return apiResponse(false, null, "Database belum siap.");
 
-    var siswaSheet = ss.getSheetByName("DB_Siswa");
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
     var raportSheet = ss.getSheetByName("DB_Raport");
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
     var taSheet = ss.getSheetByName("DB_TahunAjaran");
 
-    if (!siswaSheet || !raportSheet || !taSheet) {
-      initialSetup();
-      siswaSheet = ss.getSheetByName("DB_Siswa");
-      raportSheet = ss.getSheetByName("DB_Raport");
-      taSheet = ss.getSheetByName("DB_TahunAjaran");
-    }
+    var muridData = muridSheet ? muridSheet.getDataRange().getValues() : [];
+    var raportData = raportSheet ? raportSheet.getDataRange().getValues() : [];
+    var kelompokData = kelompokSheet ? kelompokSheet.getDataRange().getValues() : [];
+    var taData = taSheet ? taSheet.getDataRange().getValues() : [];
 
-    var siswaData = siswaSheet.getDataRange().getValues();
-    var raportData = raportSheet.getDataRange().getValues();
-    var taData = taSheet.getDataRange().getValues();
-
-    // 1. Ambil Profil Siswa
-    var studentProfile = null;
-    var cleanNis = String(nis).trim();
-
-    for (var i = 1; i < siswaData.length; i++) {
-      if (String(siswaData[i][0]).trim() === cleanNis) {
+    // Cari Data Murid
+    var muridProfile = null;
+    for (var i = 1; i < muridData.length; i++) {
+      if (String(muridData[i][0]).trim() === String(nis).trim()) {
+        var row = muridData[i];
         var tglLahirStr = "";
-        if (siswaData[i][7]) {
-          if (siswaData[i][7] instanceof Date) {
-            tglLahirStr = Utilities.formatDate(siswaData[i][7], "GMT+7", "yyyy-MM-dd");
+        if (row[7]) {
+          if (row[7] instanceof Date) {
+            tglLahirStr = Utilities.formatDate(row[7], "GMT+7", "yyyy-MM-dd");
           } else {
-            tglLahirStr = String(siswaData[i][7]);
+            tglLahirStr = String(row[7]);
           }
         }
 
-        studentProfile = {
-          nis: cleanNis,
-          nisn: String(siswaData[i][1] || ""),
-          namaSiswa: String(siswaData[i][2] || ""),
-          panggilan: String(siswaData[i][3] || ""),
-          jenjang: String(siswaData[i][4] || ""),
-          kelas: String(siswaData[i][5] || ""),
-          jenisKelamin: String(siswaData[i][6] || ""),
+        muridProfile = {
+          nis: String(row[0]).trim(),
+          namaLengkap: String(row[1] || ""),
+          namaPanggilan: String(row[2] || row[1] || ""),
+          jenisKelamin: String(row[3] || ""),
+          jenjang: String(row[4] || ""),
+          idKelompok: String(row[5] || ""),
+          tempatLahir: String(row[6] || ""),
           tanggalLahir: tglLahirStr,
-          namaOrangtua: String(siswaData[i][8] || ""),
-          noWa: String(siswaData[i][9] || "")
+          namaAyah: String(row[8] || ""),
+          namaIbu: String(row[9] || ""),
+          kontakOrtu: String(row[10] || ""),
+          statusMurid: String(row[11] || "AKTIF"),
+          alamat: String(row[12] || "")
         };
         break;
       }
     }
 
-    if (!studentProfile) {
-      return apiResponse(false, null, "Data siswa tidak ditemukan.");
+    if (!muridProfile) {
+      return apiResponse(false, null, "Data profil murid dengan NIS " + nis + " tidak ditemukan.");
     }
 
-    // 2. Cek Tahun Ajaran Aktif & Hak Akses Ortu
-    var activeTA = { tahun: "2026/2027", semester: "Ganjil (Semester 1)", aksesOrtu: "DIBUKA" };
-    for (var k = 1; k < taData.length; k++) {
-      if (String(taData[k][3]).trim().toUpperCase() === "AKTIF") {
-        activeTA.tahun = String(taData[k][1]).trim();
-        activeTA.semester = String(taData[k][2]).trim();
-        activeTA.aksesOrtu = String(taData[k][4] || "DIBUKA").trim().toUpperCase();
+    // Cari Info Kelompok & Wali Kelas
+    var namaKelompok = muridProfile.idKelompok;
+    var namaWaliKelas = "-";
+    for (var k = 1; k < kelompokData.length; k++) {
+      if (String(kelompokData[k][0]).trim().toUpperCase() === String(muridProfile.idKelompok).trim().toUpperCase()) {
+        namaKelompok = String(kelompokData[k][1] || muridProfile.idKelompok);
+        namaWaliKelas = String(kelompokData[k][4] || "-");
+        break;
+      }
+    }
+    muridProfile.namaKelompok = namaKelompok;
+    muridProfile.namaWaliKelas = namaWaliKelas;
+
+    // Cek Status Akses Global Tahun Ajaran
+    var aksesGlobalDibuka = false;
+    var namaTAAktif = "-";
+    for (var t = 1; t < taData.length; t++) {
+      if (String(taData[t][3]).toUpperCase() === "AKTIF") {
+        namaTAAktif = String(taData[t][1]) + " (Semester " + String(taData[t][2]) + ")";
+        if (String(taData[t][4]).toUpperCase() === "DIBUKA") {
+          aksesGlobalDibuka = true;
+        }
         break;
       }
     }
 
-    // 3. Ambil Daftar Raport yang Terbit (PUBLISHED)
-    var reports = [];
+    // Ambil Raport Murid yang DISETUJUI oleh Kepala Sekolah
+    // Header: [0:ID, 1:NIS, 2:ID_Kelompok, 3:ID_TA, 4:Sem, 5:URL, 6:FileID, 7:Catatan, 8:Status_Approval, 9:Catatan_Revisi, 10:Uploader, 11:Reviewed_By, 12:Tgl_Review, 13:Tgl_Dilihat, 14:Wali_Konf, 15:Timestamp]
+    var raportList = [];
+    var pendingCount = 0;
+
     for (var r = 1; r < raportData.length; r++) {
       var rRow = raportData[r];
-      var rNIS = String(rRow[1]).trim();
-      var rStatusPublish = String(rRow[11] || "").trim().toUpperCase();
+      if (!rRow[0]) continue;
 
-      if (rNIS === cleanNis && rStatusPublish === "PUBLISHED") {
-        var tglUploadStr = "-";
-        if (rRow[13]) {
-          tglUploadStr = rRow[13] instanceof Date ? Utilities.formatDate(rRow[13], "GMT+7", "dd MMMM yyyy") : String(rRow[13]);
+      if (String(rRow[1]).trim() === String(nis).trim()) {
+        var statusApp = String(rRow[8] || "DRAF").toUpperCase();
+        
+        // HANYA jika status sudah DISETUJUI oleh Kepala Sekolah
+        if (statusApp === "DISETUJUI") {
+          raportList.push({
+            idRaport: String(rRow[0]),
+            tahunAjaran: String(rRow[3]),
+            semester: String(rRow[4]),
+            urlPdf: String(rRow[5]),
+            fileId: String(rRow[6]),
+            catatanPerkembangan: String(rRow[7] || ""),
+            statusApproval: statusApp,
+            disetujuiOleh: String(rRow[11] || "Kepala Sekolah"),
+            tanggalDisetujui: rRow[12] ? Utilities.formatDate(new Date(rRow[12]), "GMT+7", "dd/MM/yyyy") : "-",
+            sudahDilihat: !!rRow[13],
+            tanggalDilihat: rRow[13] ? Utilities.formatDate(new Date(rRow[13]), "GMT+7", "dd/MM/yyyy HH:mm") : null,
+            waliKonfirmasi: String(rRow[14] || "")
+          });
+        } else {
+          pendingCount++;
         }
-        var tglDilihatStr = null;
-        if (rRow[16]) {
-          tglDilihatStr = rRow[16] instanceof Date ? Utilities.formatDate(rRow[16], "GMT+7", "dd MMMM yyyy HH:mm") : String(rRow[16]);
-        }
-
-        reports.push({
-          idRaport: String(rRow[0]),
-          tahunAjaran: String(rRow[5] || ""),
-          semester: String(rRow[6] || ""),
-          namaFile: String(rRow[8] || ""),
-          previewUrl: String(rRow[9] || ""),
-          downloadUrl: String(rRow[10] || ""),
-          catatanGuru: String(rRow[12] || "Teruslah bertumbuh dan belajar dengan gembira menjadi anak yang saleh dan mandiri!"),
-          tanggalUpload: tglUploadStr,
-          statusKonfirmasiOrtu: String(rRow[15] || "BELUM"),
-          tanggalDilihatOrtu: tglDilihatStr
-        });
       }
     }
 
     return apiResponse(true, {
-      profile: studentProfile,
-      activeTA: activeTA,
-      isAccessOpen: activeTA.aksesOrtu === "DIBUKA",
-      reports: reports
-    });
+      murid: muridProfile,
+      raportList: raportList,
+      pendingCount: pendingCount,
+      aksesGlobalDibuka: aksesGlobalDibuka,
+      tahunAjaranAktif: namaTAAktif
+    }, "Data raport murid berhasil dimuat.");
 
   } catch (err) {
-    console.error("Parent Reports Error: " + err.stack);
-    return apiResponse(false, null, "Gagal memuat raport: " + err.message);
+    return apiResponse(false, null, "Gagal memuat data raport murid: " + err.message);
   }
 }
 
 /**
- * Konfirmasi Orang Tua Bahwa Raport Telah Dilihat / Diunduh
+ * Konfirmasi tanda terima raport oleh Orang Tua / Wali Murid
  */
 function confirmReportViewedByParent(reportId, parentName) {
   try {
+    if (!reportId) return apiResponse(false, null, "ID Raport tidak valid.");
+
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Raport");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var raportSheet = ss.getSheetByName("DB_Raport");
+    var data = raportSheet.getDataRange().getValues();
+    var rowIndex = -1;
+    var targetNis = "";
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(reportId).trim()) {
-        sheet.getRange(i + 1, 16).setValue("SUDAH_DILIHAT");
-        sheet.getRange(i + 1, 17).setValue(new Date());
-
-        logActivity(parentName || "Orang Tua", "ORTU", "CONFIRM_RAPORT", "Orang tua mengonfirmasi telah melihat raport ID: " + reportId);
-        return apiResponse(true, null, "Terima kasih Ayah/Bunda! Konfirmasi Anda telah tercatat oleh sistem.");
+        rowIndex = i + 1;
+        targetNis = String(data[i][1]);
+        break;
       }
     }
-    return apiResponse(false, null, "Raport tidak ditemukan.");
+
+    if (rowIndex === -1) {
+      return apiResponse(false, null, "Data raport tidak ditemukan.");
+    }
+
+    var now = new Date();
+    // Kolom 14: Tanggal_Dilihat_Ortu (N), Kolom 15: Nama_Wali_Konfirmasi (O)
+    raportSheet.getRange(rowIndex, 14).setValue(now);
+    raportSheet.getRange(rowIndex, 15).setValue(parentName || "Wali Murid");
+
+    logActivity(parentName || "Wali Murid", "ORTU", "KONFIRMASI RAPORT", "Wali Murid mengonfirmasi telah membaca raport ID: " + reportId + " (NIS: " + targetNis + ")");
+    return apiResponse(true, { confirmedAt: Utilities.formatDate(now, "GMT+7", "dd/MM/yyyy HH:mm") }, "Terima kasih, konfirmasi penerimaan raport telah tersimpan.");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal menyimpan konfirmasi: " + err.message);
   }
 }

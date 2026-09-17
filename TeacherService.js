@@ -1,245 +1,337 @@
 /**
  * ============================================================================
- * MODUL WALI KELAS (UPLOAD & PENGELOLAAN RAPORT SISWA)
+ * MODUL GURU / WALI KELAS (MANAJEMEN RAPORT & PENGAJUAN KE KEPSEK)
+ * PG - TK - DAYCARE ANAK SALEH
  * ============================================================================
  */
 
 /**
- * Mendapatkan Daftar Siswa beserta Status Raport di Kelas yang Diampu
+ * Mengambil daftar murid di kelompok yang diampu guru beserta status raportnya
+ * @param {string} kelompokDiampu ID Kelompok yang diampu guru
  */
-function getTeacherClassStudents(kelasDiampu) {
+function getTeacherClassStudents(kelompokDiampu) {
   try {
     var ss = getDatabaseSpreadsheet();
-    if (!ss) {
-      initialSetup();
-      ss = getDatabaseSpreadsheet();
-    }
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
 
-    var siswaSheet = ss.getSheetByName("DB_Siswa");
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
     var raportSheet = ss.getSheetByName("DB_Raport");
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
     var taSheet = ss.getSheetByName("DB_TahunAjaran");
 
-    var siswaData = siswaSheet.getDataRange().getValues();
-    var raportData = raportSheet.getDataRange().getValues();
-    var taData = taSheet.getDataRange().getValues();
+    var muridData = muridSheet ? muridSheet.getDataRange().getValues() : [];
+    var raportData = raportSheet ? raportSheet.getDataRange().getValues() : [];
+    var kelompokData = kelompokSheet ? kelompokSheet.getDataRange().getValues() : [];
+    var taData = taSheet ? taSheet.getDataRange().getValues() : [];
 
-    // 1. Cari Tahun Ajaran Aktif
-    var activeTA = { tahun: "2026/2027", semester: "Ganjil (Semester 1)" };
-    for (var k = 1; k < taData.length; k++) {
-      if (String(taData[k][3]).trim().toUpperCase() === "AKTIF") {
-        activeTA.tahun = String(taData[k][1]).trim();
-        activeTA.semester = String(taData[k][2]).trim();
+    // Cari Info Kelompok Aktif
+    var infoKelompok = {
+      idKelompok: kelompokDiampu || "-",
+      namaKelompok: kelompokDiampu || "-",
+      jenjang: "-",
+      namaWaliKelas: "-"
+    };
+
+    for (var k = 1; k < kelompokData.length; k++) {
+      if (String(kelompokData[k][0]).trim().toUpperCase() === String(kelompokDiampu).trim().toUpperCase()) {
+        infoKelompok.idKelompok = String(kelompokData[k][0]);
+        infoKelompok.namaKelompok = String(kelompokData[k][1]);
+        infoKelompok.jenjang = String(kelompokData[k][2]);
+        infoKelompok.namaWaliKelas = String(kelompokData[k][4] || "");
         break;
       }
     }
 
-    // 2. Index Raport yang sudah ada pada Tahun Ajaran & Semester Aktif berdasarkan NIS
-    var raportMap = {};
-    for (var r = 1; r < raportData.length; r++) {
-      var rRow = raportData[r];
-      var rNis = String(rRow[1]).trim();
-      var rTahun = String(rRow[5]).trim();
-      var rSem = String(rRow[6]).trim();
-
-      if (rTahun === activeTA.tahun && rSem === activeTA.semester) {
-        raportMap[rNis] = {
-          idRaport: String(rRow[0]),
-          fileId: String(rRow[7]),
-          namaFile: rRow[8],
-          previewUrl: rRow[9],
-          downloadUrl: rRow[10],
-          statusPublish: rRow[11] || "DRAFT",
-          catatanGuru: rRow[12] || "",
-          tanggalUpload: rRow[13] ? Utilities.formatDate(new Date(rRow[13]), "GMT+7", "dd/MM/yyyy HH:mm") : "-",
-          statusKonfirmasiOrtu: rRow[15] || "BELUM",
-          tanggalDilihatOrtu: rRow[16] ? Utilities.formatDate(new Date(rRow[16]), "GMT+7", "dd/MM/yyyy HH:mm") : "-"
-        };
+    // Cari Tahun Ajaran Aktif
+    var activeTA = { id: "", tahun: "2025/2026", semester: "Ganjil" };
+    for (var t = 1; t < taData.length; t++) {
+      if (String(taData[t][3]).toUpperCase() === "AKTIF") {
+        activeTA.id = String(taData[t][0]);
+        activeTA.tahun = String(taData[t][1]);
+        activeTA.semester = String(taData[t][2]);
+        break;
       }
     }
 
-    // 3. Filter Siswa Sesuai Kelas Diampu (atau Semua jika Admin)
-    var studentList = [];
-    for (var i = 1; i < siswaData.length; i++) {
-      var sRow = siswaData[i];
-      if (!sRow[0]) continue;
+    // Map Raport: NIS -> Object Raport Terakhir
+    // Header Raport: [0:ID, 1:NIS, 2:ID_Kelompok, 3:ID_TA, 4:Sem, 5:URL, 6:FileID, 7:Catatan, 8:Status_Approval, 9:Catatan_Revisi, 10:Uploader, 11:Reviewed_By, 12:Tgl_Review, 13:Tgl_Dilihat, 14:Wali_Konf, 15:Timestamp]
+    var raportMap = {};
+    for (var r = 1; r < raportData.length; r++) {
+      var rRow = raportData[r];
+      if (!rRow[0]) continue;
 
-      var sNis = String(sRow[0]).trim();
-      var sKelas = String(sRow[5]).trim();
-      var sStatus = String(sRow[11]).trim().toUpperCase();
+      var rNis = String(rRow[1]).trim();
+      var rTA = String(rRow[3]);
+      var rSem = String(rRow[4]);
 
-      if (kelasDiampu && kelasDiampu !== "SEMUA" && sKelas !== kelasDiampu) {
+      // Cocokkan tahun ajaran aktif atau ambil yang terbaru
+      if (activeTA.id && rTA !== activeTA.id) continue;
+
+      raportMap[rNis] = {
+        idRaport: String(rRow[0]),
+        nis: rNis,
+        idKelompok: String(rRow[2]),
+        tahunAjaran: rTA,
+        semester: rSem,
+        urlPdf: String(rRow[5] || ""),
+        fileId: String(rRow[6] || ""),
+        catatanPerkembangan: String(rRow[7] || ""),
+        statusApproval: String(rRow[8] || "DRAF").toUpperCase(),
+        catatanRevisi: String(rRow[9] || ""),
+        uploaderUser: String(rRow[10] || ""),
+        reviewedBy: String(rRow[11] || ""),
+        tanggalReview: rRow[12] ? Utilities.formatDate(new Date(rRow[12]), "GMT+7", "dd/MM/yyyy HH:mm") : "-",
+        tanggalDilihat: rRow[13] ? Utilities.formatDate(new Date(rRow[13]), "GMT+7", "dd/MM/yyyy HH:mm") : "-",
+        namaWaliKonfirmasi: String(rRow[14] || "-")
+      };
+    }
+
+    var listMurid = [];
+    var totalMurid = 0;
+    var totalUploaded = 0;
+    var totalDiajukan = 0;
+    var totalRevisi = 0;
+    var totalDisetujui = 0;
+
+    // Header Murid: [NIS, Nama_Lengkap, Nama_Panggilan, Jenis_Kelamin, Jenjang, ID_Kelompok, Tempat_Lahir, Tanggal_Lahir, Nama_Ayah, Nama_Ibu, Kontak_Ortu, Status_Murid, Alamat, PIN_Akses, Timestamp]
+    for (var i = 1; i < muridData.length; i++) {
+      var mRow = muridData[i];
+      if (!mRow[0]) continue;
+
+      var mKelompok = String(mRow[5] || "").trim().toUpperCase();
+      var mStatus = String(mRow[11] || "AKTIF").toUpperCase();
+
+      if (kelompokDiampu && kelompokDiampu !== "SEMUA" && mKelompok !== String(kelompokDiampu).trim().toUpperCase()) {
         continue;
       }
 
-      var raportInfo = raportMap[sNis] || null;
+      if (mStatus !== "AKTIF") continue;
 
-      studentList.push({
-        nis: sNis,
-        nisn: String(sRow[1]),
-        namaSiswa: sRow[2],
-        panggilan: sRow[3],
-        jenjang: sRow[4],
-        kelas: sKelas,
-        jenisKelamin: sRow[6],
-        namaOrangtua: sRow[8],
-        noWa: String(sRow[9]),
-        pinOrtu: String(sRow[10]),
-        statusSiswa: sStatus,
-        hasRaport: raportInfo !== null,
-        raport: raportInfo
+      totalMurid++;
+      var nis = String(mRow[0]).trim();
+      var rap = raportMap[nis] || null;
+
+      var statusRaport = "BELUM_UPLOAD";
+      if (rap) {
+        totalUploaded++;
+        statusRaport = rap.statusApproval;
+        if (statusRaport === "DIAJUKAN") totalDiajukan++;
+        else if (statusRaport === "REVISI") totalRevisi++;
+        else if (statusRaport === "DISETUJUI") totalDisetujui++;
+      }
+
+      listMurid.push({
+        nis: nis,
+        namaLengkap: String(mRow[1] || ""),
+        panggilan: String(mRow[2] || mRow[1] || ""),
+        jenisKelamin: String(mRow[3] || "L"),
+        jenjang: String(mRow[4] || ""),
+        idKelompok: mKelompok,
+        namaOrtu: String(mRow[8] || mRow[9] || "-"),
+        kontakOrtu: String(mRow[10] || "-"),
+        statusRaport: statusRaport,
+        raportData: rap
       });
     }
 
     return apiResponse(true, {
+      infoKelompok: infoKelompok,
       activeTA: activeTA,
-      kelas: kelasDiampu,
-      students: studentList
-    });
-
+      stats: {
+        totalMurid: totalMurid,
+        totalUploaded: totalUploaded,
+        totalDiajukan: totalDiajukan,
+        totalRevisi: totalRevisi,
+        totalDisetujui: totalDisetujui,
+        totalBelum: totalMurid - totalUploaded
+      },
+      muridList: listMurid
+    }, "Data murid kelompok berhasil dimuat.");
   } catch (err) {
-    console.error("Teacher Class Students Error: " + err.stack);
-    return apiResponse(false, null, "Gagal memuat data kelas: " + err.message);
+    return apiResponse(false, null, "Gagal mengambil data kelompok murid: " + err.message);
   }
 }
 
 /**
- * Upload dan Simpan Berkas Raport Siswa (PDF) ke Google Drive & Database
+ * Mengunggah file Raport PDF Murid ke Google Drive dan Menyimpan Catatan
+ * @param {Object} payload { nis, idKelompok, tahunAjaran, semester, catatan, fileBase64, fileName, mimeType, statusApproval, uploaderUser }
  */
 function uploadStudentReport(payload) {
   try {
-    if (!payload || !payload.nis || !payload.fileBase64) {
-      return apiResponse(false, null, "Data raport atau berkas file tidak lengkap.");
+    if (!payload || !payload.nis || !payload.idKelompok) {
+      return apiResponse(false, null, "Parameter data murid tidak lengkap.");
     }
 
     var ss = getDatabaseSpreadsheet();
-    var raportSheet = ss.getSheetByName("DB_Raport");
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
     var rootFolder = getOrCreateRootFolder();
+    var taFolder = getOrCreateSubFolder(rootFolder, payload.tahunAjaran || "2025-2026");
+    var kelompokFolder = getOrCreateSubFolder(taFolder, payload.idKelompok);
 
-    var nis = String(payload.nis).trim();
-    var namaSiswa = payload.namaSiswa || "Siswa";
-    var kelas = payload.kelas || "Kelas";
-    var jenjang = payload.jenjang || "TK";
-    var tahunAjaran = payload.tahunAjaran || "2026-2027";
-    var semester = payload.semester || "Ganjil";
-    var catatanGuru = payload.catatanGuru || "";
-    var uploader = payload.uploaderUser || "Wali Kelas";
+    var fileUrl = payload.existingUrl || "";
+    var fileId = payload.existingFileId || "";
 
-    // 1. Buat / Dapatkan Hirarki Folder di Drive: [Tahun Ajaran] -> [Kelas]
-    var safeTA = tahunAjaran.replace(/\//g, "-");
-    var taFolder = getOrCreateSubFolder(rootFolder, safeTA);
-    var classFolder = getOrCreateSubFolder(taFolder, kelas);
+    // Simpan file baru jika ada base64
+    if (payload.fileBase64) {
+      try {
+        var base64Data = payload.fileBase64.replace(/^data:application\/pdf;base64,/, "").replace(/^data:.*;base64,/, "");
+        var decodedBytes = Utilities.base64Decode(base64Data);
+        var blob = Utilities.newBlob(decodedBytes, payload.mimeType || "application/pdf", payload.fileName || ("Raport_" + payload.nis + ".pdf"));
 
-    // 2. Decode Base64 File & Simpan ke Drive
-    var fileData = Utilities.base64Decode(payload.fileBase64.split(',').pop());
-    var cleanFileName = "Raport_" + safeTA + "_" + kelas + "_" + nis + "_" + namaSiswa.replace(/[^a-zA-Z0-9]/g, "_") + ".pdf";
-    var blob = Utilities.newBlob(fileData, payload.mimeType || "application/pdf", cleanFileName);
-    
-    var driveFile = classFolder.createFile(blob);
-    // Atur izin baca publik untuk link preview
-    driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        var savedFile = kelompokFolder.createFile(blob);
+        savedFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        
+        fileUrl = "https://drive.google.com/file/d/" + savedFile.getId() + "/preview";
+        fileId = savedFile.getId();
+      } catch (fErr) {
+        return apiResponse(false, null, "Gagal menyimpan file PDF ke Google Drive: " + fErr.message);
+      }
+    }
 
-    var fileId = driveFile.getId();
-    var previewUrl = "https://drive.google.com/file/d/" + fileId + "/preview";
-    var downloadUrl = "https://drive.google.com/uc?export=download&id=" + fileId;
+    if (!fileUrl && !payload.existingUrl) {
+      return apiResponse(false, null, "File PDF raport wajib diunggah.");
+    }
 
-    // 3. Periksa apakah sudah ada record sebelumnya untuk NIS & TA ini
-    var raportData = raportSheet.getDataRange().getValues();
-    var foundRow = -1;
-    var reportId = "RAP-" + nis + "-" + safeTA.replace(/-/g, "") + "-" + (semester.indexOf("1") !== -1 ? "1" : "2");
+    var raportSheet = ss.getSheetByName("DB_Raport");
+    if (!raportSheet) {
+      setupSheetRaport(ss);
+      raportSheet = ss.getSheetByName("DB_Raport");
+    }
 
-    for (var r = 1; r < raportData.length; r++) {
-      var rNIS = String(raportData[r][1]).trim();
-      var rTA = String(raportData[r][5]).trim();
-      var rSem = String(raportData[r][6]).trim();
+    var data = raportSheet.getDataRange().getValues();
+    var rowIndex = -1;
+    var existingId = "";
 
-      if (rNIS === nis && rTA === tahunAjaran && rSem === semester) {
-        foundRow = r + 1;
-        // Hapus file lama di Drive jika ada
-        try {
-          var oldFileId = String(raportData[r][7]).trim();
-          if (oldFileId) DriveApp.getFileById(oldFileId).setTrashed(true);
-        } catch (e) {
-          console.warn("Berkas lama tidak dapat dihapus: " + e.message);
-        }
+    // Cari apakah sudah ada data raport untuk murid ini di TA & Semester yang sama
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][1]).trim() === String(payload.nis).trim() &&
+          String(data[i][3]).trim() === String(payload.tahunAjaran).trim() &&
+          String(data[i][4]).trim() === String(payload.semester).trim()) {
+        rowIndex = i + 1;
+        existingId = String(data[i][0]);
         break;
       }
     }
 
+    var statusApproval = payload.statusApproval || "DIAJUKAN"; // Default diajukan ke Kepala Sekolah
+    var idRaport = existingId || ("RAP-" + payload.nis + "-" + new Date().getTime().toString().slice(-4));
+    var now = new Date();
+
+    // Header Raport: [0:ID, 1:NIS, 2:ID_Kelompok, 3:ID_TA, 4:Sem, 5:URL, 6:FileID, 7:Catatan, 8:Status_Approval, 9:Catatan_Revisi, 10:Uploader, 11:Reviewed_By, 12:Tgl_Review, 13:Tgl_Dilihat, 14:Wali_Konf, 15:Timestamp]
     var rowValues = [
-      reportId,
-      nis,
-      namaSiswa,
-      kelas,
-      jenjang,
-      tahunAjaran,
-      semester,
+      idRaport,
+      payload.nis,
+      payload.idKelompok,
+      payload.tahunAjaran || "2025/2026",
+      payload.semester || "Ganjil",
+      fileUrl,
       fileId,
-      cleanFileName,
-      previewUrl,
-      downloadUrl,
-      payload.statusPublish || "PUBLISHED",
-      catatanGuru,
-      new Date(),
-      uploader,
-      "BELUM",
-      ""
+      payload.catatan || "",
+      statusApproval,
+      "", // Kosongkan catatan revisi jika guru sudah upload perbaikan
+      payload.uploaderUser || "Wali Kelas",
+      "-",
+      "",
+      "",
+      "",
+      now
     ];
 
-    if (foundRow > 0) {
-      raportSheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-      logActivity(uploader, "WALI_KELAS", "UPDATE_RAPORT", "Memperbarui raport untuk " + namaSiswa + " (" + nis + ")");
+    if (rowIndex > 0) {
+      raportSheet.getRange(rowIndex, 1, 1, rowValues.length).setValues([rowValues]);
+      logActivity(payload.uploaderUser || "Wali Kelas", "WALI_KELAS", "UPDATE RAPORT", "Memperbarui raport & mengajukan ke Kepsek: NIS " + payload.nis);
     } else {
       raportSheet.appendRow(rowValues);
-      logActivity(uploader, "WALI_KELAS", "UPLOAD_RAPORT", "Mengunggah raport baru untuk " + namaSiswa + " (" + nis + ")");
+      logActivity(payload.uploaderUser || "Wali Kelas", "WALI_KELAS", "UPLOAD RAPORT", "Mengunggah raport baru & mengajukan ke Kepsek: NIS " + payload.nis);
     }
 
-    return apiResponse(true, {
-      reportId: reportId,
-      fileId: fileId,
-      previewUrl: previewUrl,
-      downloadUrl: downloadUrl
-    }, "Raport untuk ananda " + namaSiswa + " berhasil diunggah!");
+    var pesan = statusApproval === "DIAJUKAN" ? 
+      "Raport berhasil disimpan dan diajukan ke Kepala Sekolah untuk ditinjau!" : 
+      "Raport berhasil disimpan sebagai draf sementara.";
+
+    return apiResponse(true, { idRaport: idRaport, fileUrl: fileUrl, statusApproval: statusApproval }, pesan);
 
   } catch (err) {
-    console.error("Upload Report Error: " + err.stack);
     return apiResponse(false, null, "Gagal mengunggah raport: " + err.message);
   }
 }
 
 /**
- * Hapus Raport Siswa
+ * Wali Kelas mengajukan raport yang berstatus DRAF / REVISI ke Kepala Sekolah
  */
-function deleteStudentReport(reportId, uploaderUser) {
+function submitReportToKepsek(reportId, teacherUser) {
   try {
     var ss = getDatabaseSpreadsheet();
-    var sheet = ss.getSheetByName("DB_Raport");
-    var data = sheet.getDataRange().getValues();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var raportSheet = ss.getSheetByName("DB_Raport");
+    var data = raportSheet.getDataRange().getValues();
+    var rowIndex = -1;
+    var nisTarget = "";
 
     for (var i = 1; i < data.length; i++) {
       if (String(data[i][0]).trim() === String(reportId).trim()) {
-        var fileId = String(data[i][7]).trim();
-        var studentName = data[i][2];
-        
-        // Hapus file dari Drive
-        if (fileId) {
-          try {
-            DriveApp.getFileById(fileId).setTrashed(true);
-          } catch (e) {}
-        }
-
-        sheet.deleteRow(i + 1);
-        logActivity(uploaderUser || "GURU", "WALI_KELAS", "DELETE_RAPORT", "Menghapus raport siswa: " + studentName + " (ID: " + reportId + ")");
-        return apiResponse(true, null, "Raport ananda " + studentName + " berhasil dihapus.");
+        rowIndex = i + 1;
+        nisTarget = String(data[i][1]);
+        break;
       }
     }
-    return apiResponse(false, null, "Data raport tidak ditemukan.");
+
+    if (rowIndex === -1) {
+      return apiResponse(false, null, "Data raport tidak ditemukan.");
+    }
+
+    // Ubah status ke DIAJUKAN, hapus catatan revisi lama
+    raportSheet.getRange(rowIndex, 9).setValue("DIAJUKAN");
+    raportSheet.getRange(rowIndex, 10).setValue("");
+
+    logActivity(teacherUser || "Wali Kelas", "WALI_KELAS", "AJUKAN RAPORT", "Mengajukan raport ID: " + reportId + " (NIS: " + nisTarget + ") ke Kepala Sekolah.");
+    return apiResponse(true, { reportId: reportId, status: "DIAJUKAN" }, "Raport berhasil diajukan ke Kepala Sekolah!");
   } catch (err) {
-    return apiResponse(false, null, err.message);
+    return apiResponse(false, null, "Gagal mengajukan raport: " + err.message);
   }
 }
 
 /**
- * Helper mendapatkan atau membuat Sub Folder Drive
+ * Menghapus data raport dari spreadsheet dan Google Drive
+ */
+function deleteStudentReport(reportId, uploaderUser) {
+  try {
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) return apiResponse(false, null, "Database belum siap.");
+
+    var raportSheet = ss.getSheetByName("DB_Raport");
+    var data = raportSheet.getDataRange().getValues();
+
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === String(reportId).trim()) {
+        var fileId = String(data[i][6] || "").trim();
+        var targetNis = String(data[i][1] || "").trim();
+
+        // Hapus file dari Drive jika ada fileId
+        if (fileId) {
+          try {
+            DriveApp.getFileById(fileId).setTrashed(true);
+          } catch (e) {
+            console.warn("Gagal menghapus file Drive: " + e.message);
+          }
+        }
+
+        raportSheet.deleteRow(i + 1);
+        logActivity(uploaderUser || "Wali Kelas", "WALI_KELAS", "HAPUS RAPORT", "Menghapus raport ID: " + reportId + " (NIS: " + targetNis + ")");
+        return apiResponse(true, null, "Berkas raport berhasil dihapus.");
+      }
+    }
+
+    return apiResponse(false, null, "Data raport tidak ditemukan.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal menghapus raport: " + err.message);
+  }
+}
+
+/**
+ * Helper SubFolder Google Drive
  */
 function getOrCreateSubFolder(parentFolder, folderName) {
   var folders = parentFolder.getFoldersByName(folderName);

@@ -119,12 +119,27 @@ function executeAction(action, args) {
       return toggleReportPublishStatus(args[0], args[1], args[2]);
     case 'getActivityLogsAdmin':
       return getActivityLogsAdmin(args[0]);
+    // Endpoint Kepala Sekolah
+    case 'getKepsekDashboardSummary':
+      return getKepsekDashboardSummary();
+    case 'getKepsekReportsList':
+      return getKepsekReportsList(args[0], args[1]);
+    case 'approveReportKepsek':
+      return approveReportKepsek(args[0], args[1]);
+    case 'rejectReportKepsek':
+      return rejectReportKepsek(args[0], args[1], args[2]);
+    case 'bulkApproveReportsKepsek':
+      return bulkApproveReportsKepsek(args[0], args[1]);
+    // Endpoint Wali Kelas
     case 'getTeacherClassStudents':
       return getTeacherClassStudents(args[0]);
     case 'uploadStudentReport':
       return uploadStudentReport(args[0]);
+    case 'submitReportToKepsek':
+      return submitReportToKepsek(args[0], args[1]);
     case 'deleteStudentReport':
       return deleteStudentReport(args[0], args[1]);
+    // Endpoint Wali Murid
     case 'getParentStudentReports':
       return getParentStudentReports(args[0]);
     case 'confirmReportViewedByParent':
