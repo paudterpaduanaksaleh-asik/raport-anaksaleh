@@ -6,6 +6,175 @@
  */
 
 /**
+ * Master API: Mengambil seluruh data Admin (Summary, Murid, Guru, Kelompok, TA) dalam 1 kali roundtrip
+ */
+function getAdminAllData() {
+  try {
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) {
+      initialSetup();
+      ss = getDatabaseSpreadsheet();
+    }
+
+    var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+    var usersSheet = ss.getSheetByName("DB_Users");
+    var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
+    var raportSheet = ss.getSheetByName("DB_Raport");
+    var taSheet = ss.getSheetByName("DB_TahunAjaran");
+
+    var muridData = muridSheet ? muridSheet.getDataRange().getValues() : [];
+    var usersData = usersSheet ? usersSheet.getDataRange().getValues() : [];
+    var kelompokData = kelompokSheet ? kelompokSheet.getDataRange().getValues() : [];
+    var raportData = raportSheet ? raportSheet.getDataRange().getValues() : [];
+    var taData = taSheet ? taSheet.getDataRange().getValues() : [];
+
+    // 1. Parse Murid
+    var students = [];
+    var totalMurid = 0;
+    var perJenjang = { "Playgroup (PG)": 0, "TK-A": 0, "TK-B": 0, "Daycare": 0 };
+    var muridCountMap = {};
+
+    for (var i = 1; i < muridData.length; i++) {
+      var row = muridData[i];
+      if (!row[0]) continue;
+
+      var jg = String(row[4] || "");
+      var kId = String(row[5] || "");
+      var st = String(row[11] || "AKTIF").toUpperCase();
+
+      if (st === "AKTIF") {
+        totalMurid++;
+        if (perJenjang[jg] !== undefined) perJenjang[jg]++;
+        if (kId) muridCountMap[kId] = (muridCountMap[kId] || 0) + 1;
+      }
+
+      var tglLahir = "";
+      if (row[7]) {
+        if (row[7] instanceof Date) {
+          tglLahir = Utilities.formatDate(row[7], "GMT+7", "yyyy-MM-dd");
+        } else {
+          tglLahir = String(row[7]);
+        }
+      }
+
+      students.push({
+        nis: String(row[0]).trim(),
+        namaLengkap: String(row[1] || ""),
+        namaPanggilan: String(row[2] || ""),
+        jenisKelamin: String(row[3] || "L"),
+        jenjang: jg,
+        idKelompok: kId,
+        tempatLahir: String(row[6] || ""),
+        tanggalLahir: tglLahir,
+        namaAyah: String(row[8] || ""),
+        namaIbu: String(row[9] || ""),
+        kontakOrtu: String(row[10] || ""),
+        status: st,
+        alamat: String(row[12] || ""),
+        pin: String(row[13] || "")
+      });
+    }
+
+    // 2. Parse Users (Guru & Kepsek)
+    var teachers = [];
+    var totalGuru = 0;
+    var totalKepsek = 0;
+    for (var j = 1; j < usersData.length; j++) {
+      var uRow = usersData[j];
+      if (!uRow[0]) continue;
+      var role = String(uRow[4] || "WALI_KELAS").toUpperCase();
+      var uStatus = String(uRow[7] || "AKTIF").toUpperCase();
+      if (uStatus === "AKTIF") {
+        if (role === "WALI_KELAS" || role === "GURU") totalGuru++;
+        else if (role === "KEPSEK") totalKepsek++;
+      }
+      teachers.push({
+        userId: String(uRow[0]).trim(),
+        username: String(uRow[1] || "").trim(),
+        password: String(uRow[2] || ""),
+        namaLengkap: String(uRow[3] || ""),
+        role: role,
+        kelompokDiampu: String(uRow[5] || ""),
+        kontakWa: String(uRow[6] || ""),
+        status: uStatus
+      });
+    }
+
+    // 3. Parse Kelompok
+    var classes = [];
+    for (var c = 1; c < kelompokData.length; c++) {
+      var cRow = kelompokData[c];
+      if (!cRow[0]) continue;
+      var idKel = String(cRow[0]).trim();
+      classes.push({
+        idKelompok: idKel,
+        namaKelompok: String(cRow[1] || ""),
+        jenjang: String(cRow[2] || ""),
+        idWaliKelas: String(cRow[3] || ""),
+        namaWaliKelas: String(cRow[4] || ""),
+        kapasitas: Number(cRow[5] || 15),
+        tahunAjaran: String(cRow[6] || "2025/2026"),
+        status: String(cRow[7] || "AKTIF"),
+        jumlahMurid: muridCountMap[idKel] || 0
+      });
+    }
+
+    // 4. Parse Raport Stats
+    var raportStats = {
+      total: Math.max(0, raportData.length - 1),
+      draf: 0,
+      diajukan: 0,
+      revisi: 0,
+      disetujui: 0
+    };
+    for (var rp = 1; rp < raportData.length; rp++) {
+      var appSt = String(raportData[rp][8] || "").toUpperCase();
+      if (appSt === "DIAJUKAN") raportStats.diajukan++;
+      else if (appSt === "REVISI") raportStats.revisi++;
+      else if (appSt === "DISETUJUI") raportStats.disetujui++;
+      else if (appSt === "DRAF") raportStats.draf++;
+    }
+
+    // 5. Parse Tahun Ajaran
+    var years = [];
+    var activeTA = { id: "", tahun: "-", semester: "-", statusAksesOrtu: "DITUTUP" };
+    for (var t = 1; t < taData.length; t++) {
+      var tRow = taData[t];
+      if (!tRow[0]) continue;
+      var taItem = {
+        idTahun: String(tRow[0]),
+        namaTahun: String(tRow[1]),
+        semester: String(tRow[2]),
+        statusAktif: String(tRow[3]),
+        statusAksesOrtu: String(tRow[4])
+      };
+      years.push(taItem);
+      if (taItem.statusAktif.toUpperCase() === "AKTIF") {
+        activeTA = taItem;
+      }
+    }
+
+    return apiResponse(true, {
+      summary: {
+        totalMurid: totalMurid,
+        perJenjang: perJenjang,
+        totalGuru: totalGuru,
+        totalKepsek: totalKepsek,
+        totalKelompok: classes.length,
+        raportStats: raportStats,
+        activeTA: activeTA
+      },
+      students: students,
+      teachers: teachers,
+      classes: classes,
+      years: years
+    }, "Data admin berhasil dimuat.");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal memuat data master: " + err.message);
+  }
+}
+
+/**
  * Ringkasan Statistik Dashboard Admin
  */
 function getAdminDashboardSummary() {

@@ -98,6 +98,8 @@ function executeAction(action, args) {
   switch (action) {
     case 'handleLogin':
       return handleLogin(args[0]);
+    case 'getAdminAllData':
+      return getAdminAllData();
     case 'getAdminDashboardSummary':
       return getAdminDashboardSummary();
     case 'getStudentsListAdmin':
