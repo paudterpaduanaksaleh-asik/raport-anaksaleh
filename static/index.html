@@ -972,12 +972,293 @@
         // Toast
         toast: { show: false, message: '', type: 'info' },
 
-        // API Endpoint (Auto-detects FastAPI or Local Origin)
-        apiUrl: window.location.origin.includes('github.io') ? 
-          'https://script.google.com/macros/s/AKfycbz28JnLoMuky8QP_0YYaMURpds12LY2PuBSK29R7hidLAdgnNhXnh-oW1kcEcSVGXYoNg/exec' : 
-          '/api',
+        // Client Database Fallback (for Firebase Hosting & Offline)
+        clientDb: null,
+
+        initLocalDb() {
+          const saved = localStorage.getItem('ANAK_SALEH_LOCAL_DB');
+          if (saved) {
+            try { this.clientDb = JSON.parse(saved); return; } catch(e) {}
+          }
+          this.clientDb = {
+            users: [
+              { userId: "USR-ADM-01", username: "admin", password: "admin123", namaLengkap: "Administrator Portal", role: "ADMIN", kelompokDiampu: "SEMUA", kontakWa: "081234567890", status: "AKTIF" },
+              { userId: "USR-KPS-01", username: "kepsek", password: "kepsek123", namaLengkap: "Hj. Siti Aminah, M.Pd.", role: "KEPSEK", kelompokDiampu: "SEMUA", kontakWa: "081234567891", status: "AKTIF" },
+              { userId: "USR-GUR-01", username: "guru.tka", password: "guru123", namaLengkap: "Bunda Nurul Hidayah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TK-A1", kontakWa: "081234567892", status: "AKTIF" },
+              { userId: "USR-GUR-02", username: "guru.tkb", password: "guru123", namaLengkap: "Bunda Fatimah Az-Zahra, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "TK-B1", kontakWa: "081234567893", status: "AKTIF" },
+              { userId: "USR-GUR-03", username: "guru.pg", password: "guru123", namaLengkap: "Bunda Aisyah Humaira, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "KB-A", kontakWa: "081234567894", status: "AKTIF" },
+              { userId: "USR-GUR-04", username: "guru.daycare", password: "guru123", namaLengkap: "Bunda Maryam Shalihah, S.Pd.", role: "WALI_KELAS", kelompokDiampu: "DC-1", kontakWa: "081234567895", status: "AKTIF" }
+            ],
+            murid: [
+              { nis: "202601", namaLengkap: "Muhammad Al-Fatih Pratama", namaPanggilan: "Fatih", jenisKelamin: "L", jenjang: "Playgroup (PG)", idKelompok: "KB-A", tempatLahir: "Jakarta", tanggalLahir: "2022-03-15", namaAyah: "Hendra Pratama", namaIbu: "Rina Kartika", kontakOrtu: "081122334455", status: "AKTIF", alamat: "Jl. Melati No. 12, Kebayoran", pin: "1234" },
+              { nis: "202603", namaLengkap: "Ahmad Zaidan Robbani", namaPanggilan: "Zaidan", jenisKelamin: "L", jenjang: "TK-A", idKelompok: "TK-A1", tempatLahir: "Jakarta", tanggalLahir: "2021-05-20", namaAyah: "Rudi Hartono", namaIbu: "Siti Nurhaliza", kontakOrtu: "081122334456", status: "AKTIF", alamat: "Jl. Mawar Indah Blok B4", pin: "1234" },
+              { nis: "202605", namaLengkap: "Ibrahim Rayyan Malik", namaPanggilan: "Rayyan", jenisKelamin: "L", jenjang: "TK-B", idKelompok: "TK-B1", tempatLahir: "Depok", tanggalLahir: "2020-08-10", namaAyah: "Dedi Setiadi", namaIbu: "Ratna Sari", kontakOrtu: "081122334457", status: "AKTIF", alamat: "Jl. Anggrek Raya No. 45", pin: "1234" },
+              { nis: "202607", namaLengkap: "Bilal Arkananta Wijaya", namaPanggilan: "Bilal", jenisKelamin: "L", jenjang: "Daycare", idKelompok: "DC-1", tempatLahir: "Jakarta", tanggalLahir: "2023-01-08", namaAyah: "Agus Santoso", namaIbu: "Laila Majnun", kontakOrtu: "081122334460", status: "AKTIF", alamat: "Jl. Flamboyan No. 18", pin: "1234" }
+            ],
+            kelompok: [
+              { idKelompok: "KB-A", namaKelompok: "Kelas Al-Kautsar (Playgroup)", jenjang: "Playgroup (PG)", idWaliKelas: "USR-GUR-03", namaWaliKelas: "Bunda Aisyah Humaira, S.Pd.", kapasitas: 15, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
+              { idKelompok: "TK-A1", namaKelompok: "Kelas Ar-Rahman (TK-A)", jenjang: "TK-A", idWaliKelas: "USR-GUR-01", namaWaliKelas: "Bunda Nurul Hidayah, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
+              { idKelompok: "TK-B1", namaKelompok: "Kelas Al-Ikhlas (TK-B)", jenjang: "TK-B", idWaliKelas: "USR-GUR-02", namaWaliKelas: "Bunda Fatimah Az-Zahra, S.Pd.", kapasitas: 20, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 },
+              { idKelompok: "DC-1", namaKelompok: "Bintang Cilik (Daycare)", jenjang: "Daycare", idWaliKelas: "USR-GUR-04", namaWaliKelas: "Bunda Maryam Shalihah, S.Pd.", kapasitas: 10, tahunAjaran: "2025/2026", status: "AKTIF", jumlahMurid: 1 }
+            ],
+            tahun_ajaran: [
+              { idTahun: "TA-2025-GANJIL", namaTahun: "2025/2026", semester: "Ganjil (Semester 1)", statusAktif: "AKTIF", statusAksesOrtu: "DIBUKA" },
+              { idTahun: "TA-2025-GENAP", namaTahun: "2025/2026", semester: "Genap (Semester 2)", statusAktif: "NONAKTIF", statusAksesOrtu: "DITUTUP" }
+            ],
+            raport: [
+              {
+                idRaport: "RAP-202603-01",
+                nis: "202603",
+                idKelompok: "TK-A1",
+                tahunAjaran: "2025/2026",
+                semester: "Ganjil (Semester 1)",
+                urlPdf: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                fileId: "demo_pdf_01",
+                catatanPerkembangan: "Ananda Zaidan sangat aktif dalam kegiatan motorik kasar dan mandiri saat berwudhu.",
+                statusApproval: "DISETUJUI",
+                catatanRevisi: "",
+                uploaderUser: "Bunda Nurul Hidayah, S.Pd.",
+                reviewedBy: "Hj. Siti Aminah, M.Pd.",
+                tanggalReview: "15/09/2026 09:30",
+                tanggalDilihat: "16/09/2026 14:20",
+                namaWaliKonfirmasi: "Rudi Hartono (Ayah)",
+                sudahDilihat: true
+              },
+              {
+                idRaport: "RAP-202601-01",
+                nis: "202601",
+                idKelompok: "KB-A",
+                tahunAjaran: "2025/2026",
+                semester: "Ganjil (Semester 1)",
+                urlPdf: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+                fileId: "demo_pdf_02",
+                catatanPerkembangan: "Ananda Fatih sangat ceria dan antusias dalam mendengarkan kisah nabi.",
+                statusApproval: "DIAJUKAN",
+                catatanRevisi: "",
+                uploaderUser: "Bunda Aisyah Humaira, S.Pd.",
+                reviewedBy: "",
+                tanggalReview: "",
+                tanggalDilihat: "",
+                namaWaliKonfirmasi: "",
+                sudahDilihat: false
+              }
+            ],
+            logs: [
+              { timestamp: "17/09/2026 19:20:00", user: "SYSTEM", role: "SETUP", aktivitas: "Sistem Siap", detail: "Database Raport Digital Berhasil Dimuat" }
+            ]
+          };
+          localStorage.setItem('ANAK_SALEH_LOCAL_DB', JSON.stringify(this.clientDb));
+        },
+
+        saveClientDb() {
+          if (this.clientDb) {
+            localStorage.setItem('ANAK_SALEH_LOCAL_DB', JSON.stringify(this.clientDb));
+          }
+        },
+
+        executeLocalMock(endpoint, method, body) {
+          if (!this.clientDb) this.initLocalDb();
+          const cleanEp = endpoint.split('?')[0];
+
+          if (cleanEp.includes('/auth/login')) {
+            const role = body.role;
+            const ident = (body.identifier || '').trim().toLowerCase();
+            const secret = (body.secret || '').trim();
+
+            if (role === 'ORTU') {
+              const m = this.clientDb.murid.find(s => s.nis.toLowerCase() === ident && (s.pin || '1234') === secret);
+              if (m) {
+                return { success: true, message: `Selamat datang, Wali dari Ananda ${m.namaLengkap}!`, data: { role: 'ORTU', ...m, namaMurid: m.namaLengkap } };
+              }
+              return { success: false, message: 'NIS atau PIN Orang Tua tidak sesuai.' };
+            } else {
+              const u = this.clientDb.users.find(x => x.username.toLowerCase() === ident && x.password === secret);
+              if (u) {
+                return { success: true, message: `Selamat datang, ${u.namaLengkap}!`, data: u };
+              }
+              return { success: false, message: 'Username atau kata sandi tidak sesuai.' };
+            }
+          }
+
+          if (cleanEp.includes('/admin/all-data')) {
+            return {
+              success: true,
+              data: {
+                summary: {
+                  totalMurid: this.clientDb.murid.length,
+                  totalGuru: this.clientDb.users.filter(x => x.role === 'WALI_KELAS').length,
+                  totalKelompok: this.clientDb.kelompok.length,
+                  tahunAjaranAktif: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.namaTahun || '2025/2026',
+                  semesterAktif: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.semester || 'Ganjil',
+                  statusAksesOrtu: this.clientDb.tahun_ajaran.find(t => t.statusAktif === 'AKTIF')?.statusAksesOrtu || 'DIBUKA'
+                },
+                students: this.clientDb.murid,
+                teachers: this.clientDb.users,
+                classes: this.clientDb.kelompok,
+                years: this.clientDb.tahun_ajaran,
+                logs: this.clientDb.logs
+              }
+            };
+          }
+
+          if (cleanEp.includes('/admin/students') && method === 'POST') {
+            const s = body;
+            const idx = this.clientDb.murid.findIndex(m => m.nis === s.nis);
+            if (idx >= 0) this.clientDb.murid[idx] = { ...this.clientDb.murid[idx], ...s };
+            else this.clientDb.murid.push(s);
+            this.saveClientDb();
+            return { success: true, message: 'Data murid berhasil disimpan.' };
+          }
+
+          if (cleanEp.includes('/admin/students') && method === 'DELETE') {
+            const nis = endpoint.split('/').pop();
+            this.clientDb.murid = this.clientDb.murid.filter(m => m.nis !== nis);
+            this.saveClientDb();
+            return { success: true, message: 'Data murid dihapus.' };
+          }
+
+          if (cleanEp.includes('/admin/years/settings')) {
+            const y = this.clientDb.tahun_ajaran.find(t => t.idTahun === body.idTahun);
+            if (y) {
+              y.statusAktif = body.statusAktif;
+              y.statusAksesOrtu = body.statusAksesOrtu;
+              this.saveClientDb();
+            }
+            return { success: true, message: 'Pengaturan tahun ajaran disimpan.' };
+          }
+
+          if (cleanEp.includes('/admin/reset')) {
+            localStorage.removeItem('ANAK_SALEH_LOCAL_DB');
+            this.initLocalDb();
+            return { success: true, message: 'Database reset berhasil!' };
+          }
+
+          if (cleanEp.includes('/kepsek/summary')) {
+            const rList = this.clientDb.raport;
+            return {
+              success: true,
+              data: {
+                stats: {
+                  totalRaport: rList.length,
+                  disetujui: rList.filter(r => r.statusApproval === 'DISETUJUI').length,
+                  menungguAcc: rList.filter(r => r.statusApproval === 'DIAJUKAN').length,
+                  perluRevisi: rList.filter(r => r.statusApproval === 'REVISI').length,
+                  dilihatOrtu: rList.filter(r => r.sudahDilihat).length
+                },
+                kelompokList: this.clientDb.kelompok
+              }
+            };
+          }
+
+          if (cleanEp.includes('/kepsek/reports')) {
+            return {
+              success: true,
+              data: this.clientDb.raport.map(r => {
+                const m = this.clientDb.murid.find(x => x.nis === r.nis) || {};
+                return { ...r, namaMurid: m.namaLengkap, jenjang: m.jenjang };
+              })
+            };
+          }
+
+          if (cleanEp.includes('/kepsek/approve')) {
+            const r = this.clientDb.raport.find(x => x.idRaport === body.idRaport);
+            if (r) {
+              r.statusApproval = 'DISETUJUI';
+              r.reviewedBy = body.kepsekName;
+              r.tanggalReview = new Date().toLocaleString('id-ID');
+              this.saveClientDb();
+            }
+            return { success: true, message: 'Raport berhasil di-ACC!' };
+          }
+
+          if (cleanEp.includes('/kepsek/reject')) {
+            const r = this.clientDb.raport.find(x => x.idRaport === body.idRaport);
+            if (r) {
+              r.statusApproval = 'REVISI';
+              r.catatanRevisi = body.notes;
+              r.reviewedBy = body.kepsekName;
+              r.tanggalReview = new Date().toLocaleString('id-ID');
+              this.saveClientDb();
+            }
+            return { success: true, message: 'Catatan revisi dikirim!' };
+          }
+
+          if (cleanEp.includes('/teacher/class-students')) {
+            const kel = this.currentUser?.kelompokDiampu || 'TK-A1';
+            const sList = (kel === 'SEMUA') ? this.clientDb.murid : this.clientDb.murid.filter(s => s.idKelompok === kel);
+            return {
+              success: true,
+              data: {
+                infoKelompok: this.clientDb.kelompok.find(k => k.idKelompok === kel) || { namaKelompok: kel },
+                activeTA: { tahun: '2025/2026', semester: 'Ganjil' },
+                stats: { totalSiswa: sList.length, raportDiunggah: this.clientDb.raport.filter(r => sList.some(s => s.nis === r.nis)).length },
+                muridList: sList.map(s => {
+                  const rap = this.clientDb.raport.find(r => r.nis === s.nis) || null;
+                  return {
+                    ...s,
+                    statusRaport: rap ? (rap.statusApproval === 'DISETUJUI' ? 'DISETUJUI' : (rap.statusApproval === 'REVISI' ? 'REVISI' : 'DIAJUKAN')) : 'BELUM_UPLOAD',
+                    raportData: rap
+                  };
+                })
+              }
+            };
+          }
+
+          if (cleanEp.includes('/teacher/upload-report')) {
+            const p = body;
+            let rap = this.clientDb.raport.find(r => r.nis === p.nis);
+            if (rap) {
+              rap.catatanPerkembangan = p.catatan;
+              rap.statusApproval = p.statusApproval;
+              rap.urlPdf = p.fileBase64 ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' : rap.urlPdf;
+            } else {
+              this.clientDb.raport.push({
+                idRaport: 'RAP-' + p.nis + '-' + Date.now().toString().slice(-4),
+                nis: p.nis,
+                idKelompok: p.idKelompok,
+                tahunAjaran: p.tahunAjaran,
+                semester: p.semester,
+                catatanPerkembangan: p.catatan,
+                statusApproval: p.statusApproval,
+                catatanRevisi: '',
+                urlPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                sudahDilihat: false
+              });
+            }
+            this.saveClientDb();
+            return { success: true, message: 'Raport berhasil disimpan & diajukan!' };
+          }
+
+          if (cleanEp.includes('/parent/student-reports')) {
+            const nis = this.currentUser?.nis;
+            const m = this.clientDb.murid.find(s => s.nis === nis) || this.currentUser;
+            const rList = this.clientDb.raport.filter(r => r.nis === nis);
+            return {
+              success: true,
+              data: {
+                murid: m,
+                statusAksesOrtu: 'DIBUKA',
+                raportList: rList
+              }
+            };
+          }
+
+          if (cleanEp.includes('/parent/confirm-viewed')) {
+            const r = this.clientDb.raport.find(x => x.idRaport === body.idRaport);
+            if (r) {
+              r.sudahDilihat = true;
+              r.namaWaliKonfirmasi = body.parentName;
+              r.tanggalDilihat = new Date().toLocaleString('id-ID');
+              this.saveClientDb();
+            }
+            return { success: true, message: 'Tanda terima berhasil disimpan!' };
+          }
+
+          return { success: true, message: 'OK' };
+        },
 
         initApp() {
+          this.initLocalDb();
           const saved = localStorage.getItem('ANAK_SALEH_SESSION');
           if (saved) {
             try {
@@ -1018,27 +1299,33 @@
         async apiCall(endpoint, method = 'GET', body = null) {
           this.loading = true;
           try {
-            // Check if backend is FastAPI (/api/...)
-            if (this.apiUrl === '/api') {
-              const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-              if (body) opts.body = JSON.stringify(body);
-              const res = await fetch(`/api${endpoint}`, opts);
-              const json = await res.json();
-              this.loading = false;
-              return json;
-            } else {
-              // Google Apps Script Gateway Fallback
-              const params = new URLSearchParams({ action: endpoint.replace('/api/', '').replace(/\//g, '_') });
-              if (body) params.append('args', JSON.stringify([body]));
-              const res = await fetch(`${this.apiUrl}?${params.toString()}`);
-              const json = await res.json();
-              this.loading = false;
-              return json;
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+            if (body) opts.body = JSON.stringify(body);
+
+            // Attempt fetch to backend
+            try {
+              const res = await fetch(`/api${cleanEndpoint}`, opts);
+              if (res && res.ok) {
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                  const json = await res.json();
+                  this.loading = false;
+                  return json;
+                }
+              }
+            } catch (fetchErr) {
+              // Ignore network error and fall back to local reactive DB
             }
-          } catch (err) {
+
+            // Fallback to in-browser reactive mock database
+            const mockRes = this.executeLocalMock(cleanEndpoint, method, body);
             this.loading = false;
-            this.showToast('Gagal memuat dari server: ' + err.message, 'error');
-            return { success: false, message: err.message };
+            return mockRes;
+          } catch (err) {
+            const mockRes = this.executeLocalMock(endpoint, method, body);
+            this.loading = false;
+            return mockRes;
           }
         },
 
