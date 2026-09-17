@@ -1228,11 +1228,12 @@
 
           if (cleanEp.includes('/teacher/upload-report')) {
             const p = body;
+            const pdfDataUrl = p.fileBase64 || p.urlPdf || '';
             let rap = this.clientDb.raport.find(r => r.nis === p.nis);
             if (rap) {
               rap.catatanPerkembangan = p.catatan;
               rap.statusApproval = p.statusApproval;
-              rap.urlPdf = p.fileBase64 ? 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' : rap.urlPdf;
+              if (pdfDataUrl) rap.urlPdf = pdfDataUrl;
             } else {
               this.clientDb.raport.push({
                 idRaport: 'RAP-' + p.nis + '-' + Date.now().toString().slice(-4),
@@ -1243,12 +1244,12 @@
                 catatanPerkembangan: p.catatan,
                 statusApproval: p.statusApproval,
                 catatanRevisi: '',
-                urlPdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+                urlPdf: pdfDataUrl || 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs/preview',
                 sudahDilihat: false
               });
             }
             this.saveClientDb();
-            return { success: true, message: 'Raport berhasil disimpan & diajukan!' };
+            return { success: true, message: 'Berkas raport PDF berhasil diunggah & disimpan!' };
           }
 
           if (cleanEp.includes('/parent/student-reports')) {
@@ -1564,15 +1565,34 @@
           let embedUrl = url;
           let rawUrl = url;
 
-          // Check if Google Drive link (e.g. /file/d/ID/view, id=ID, or direct ID)
-          const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-          if (driveMatch && driveMatch[1]) {
-            const fileId = driveMatch[1];
-            embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-            rawUrl = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
-          } else if (url.startsWith('http')) {
-            // External PDF link via Google Docs Viewer
-            embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+          // Check if data URL (uploaded file)
+          if (url.startsWith('data:')) {
+            try {
+              const parts = url.split(',');
+              const byteCharacters = atob(parts[1]);
+              const byteNumbers = new Array(byteCharacters.length);
+              for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+              }
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: 'application/pdf' });
+              embedUrl = URL.createObjectURL(blob);
+              rawUrl = embedUrl;
+            } catch (err) {
+              embedUrl = url;
+              rawUrl = url;
+            }
+          } else {
+            // Check if Google Drive link (e.g. /file/d/ID/view, id=ID, or direct ID)
+            const driveMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (driveMatch && driveMatch[1]) {
+              const fileId = driveMatch[1];
+              embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+              rawUrl = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+            } else if (url.startsWith('http') && !url.includes('drive.google.com')) {
+              // External PDF link via Google Docs Viewer
+              embedUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            }
           }
 
           this.modalPdf = {
