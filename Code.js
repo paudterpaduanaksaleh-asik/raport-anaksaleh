@@ -19,6 +19,22 @@ var CONFIG = {
  * Entry point HTTP GET untuk Google Apps Script Web App
  */
 function doGet(e) {
+  // Jika dipanggil via API query parameter
+  if (e && e.parameter && e.parameter.action) {
+    var action = e.parameter.action;
+    var args = [];
+    if (e.parameter.args) {
+      try {
+        args = JSON.parse(e.parameter.args);
+      } catch (err) {
+        args = [e.parameter.args];
+      }
+    }
+    var result = executeAction(action, args);
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   var template = HtmlService.createTemplateFromFile('Index');
   
   template.appConfig = {
@@ -31,6 +47,95 @@ function doGet(e) {
     .setTitle(CONFIG.SCHOOL_NAME + " - Dashboard Raport")
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * Entry point HTTP POST untuk API eksternal (GitHub Pages, dsb.)
+ */
+function doPost(e) {
+  try {
+    var rawData = e && e.postData ? e.postData.contents : null;
+    var parsed = {};
+    if (rawData) {
+      try {
+        parsed = JSON.parse(rawData);
+      } catch (err) {
+        parsed = e.parameter || {};
+      }
+    } else if (e && e.parameter) {
+      parsed = e.parameter;
+    }
+
+    var action = parsed.action || "";
+    var args = parsed.args || [];
+    
+    var result = executeAction(action, args);
+    return ContentService.createTextOutput(JSON.stringify(result))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      message: "Server Error: " + err.message
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Dispatcher untuk mengeksekusi fungsi backend berdasarkan nama aksi
+ */
+function executeAction(action, args) {
+  if (!Array.isArray(args)) args = [];
+  
+  switch (action) {
+    case 'handleLogin':
+      return handleLogin(args[0]);
+    case 'getAdminDashboardSummary':
+      return getAdminDashboardSummary();
+    case 'getStudentsListAdmin':
+      return getStudentsListAdmin(args[0], args[1]);
+    case 'saveStudentAdmin':
+      return saveStudentAdmin(args[0], args[1]);
+    case 'bulkSaveStudentsAdmin':
+      return bulkSaveStudentsAdmin(args[0], args[1]);
+    case 'deleteStudentAdmin':
+      return deleteStudentAdmin(args[0], args[1]);
+    case 'getTeachersListAdmin':
+      return getTeachersListAdmin();
+    case 'saveTeacherAdmin':
+      return saveTeacherAdmin(args[0], args[1]);
+    case 'getClassesListAdmin':
+      return getClassesListAdmin();
+    case 'saveClassAdmin':
+      return saveClassAdmin(args[0], args[1]);
+    case 'deleteClassAdmin':
+      return deleteClassAdmin(args[0], args[1]);
+    case 'getClassStudentsAdmin':
+      return getClassStudentsAdmin(args[0]);
+    case 'getAcademicYearsListAdmin':
+      return getAcademicYearsListAdmin();
+    case 'setAcademicYearSettingsAdmin':
+      return setAcademicYearSettingsAdmin(args[0], args[1], args[2], args[3]);
+    case 'toggleReportPublishStatus':
+      return toggleReportPublishStatus(args[0], args[1], args[2]);
+    case 'getActivityLogsAdmin':
+      return getActivityLogsAdmin(args[0]);
+    case 'getTeacherClassStudents':
+      return getTeacherClassStudents(args[0]);
+    case 'uploadStudentReport':
+      return uploadStudentReport(args[0]);
+    case 'deleteStudentReport':
+      return deleteStudentReport(args[0], args[1]);
+    case 'getParentStudentReports':
+      return getParentStudentReports(args[0]);
+    case 'confirmReportViewedByParent':
+      return confirmReportViewedByParent(args[0], args[1]);
+    case 'resetDataForSimulation':
+      return resetDataForSimulation();
+    case 'initialSetup':
+      return initialSetup();
+    default:
+      return { success: false, message: "Aksi '" + action + "' tidak dikenali di server." };
+  }
 }
 
 /**
