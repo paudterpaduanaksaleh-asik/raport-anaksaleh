@@ -28,6 +28,15 @@ Dokumen ini berisi informasi konfigurasi master, arsitektur, dan langkah pemulih
 - **`ParentService.js`**: Layanan portal wali murid untuk melihat raport dan konfirmasi tanda terima.
 - **`main.py` & `services/sheets_db.py`**: Backend alternatif Python FastAPI untuk server lokal / cloud mandiri.
 - **`firebase.json` & `.firebaserc`**: Konfigurasi deployment Firebase Hosting (folder `static`).
+- **`backups/`**: Direktori penyimpanan arsip ZIP snapshot lengkap proyek.
+
+---
+
+## 3. Berkas Cadangan Offline (ZIP Backup)
+Arsip snapshot mandiri tersimpan di:
+- **Lokasi**: `backups/raport-anaksaleh-backup-20260918_075133.zip`
+- **Isi**: Seluruh kode sumber frontend, backend Google Apps Script, backend Python FastAPI, template HTML, dan konfigurasi Firebase (tanpa ketergantungan `node_modules` atau cache).
+- **Cara Ekstrak**: Cukup un-zip / ekstrak file zip ini ke folder baru untuk mendapatkan codebase utuh yang siap dideploy.
 
 ---
 
