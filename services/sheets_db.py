@@ -604,6 +604,52 @@ class DatabaseManager:
         self._save_local()
         return True
 
+    # ================= FULL CLOUD SYNC =================
+    def sync_all_data(self, payload: Dict[str, Any], operator: str = "ADMIN") -> Dict[str, Any]:
+        if not payload:
+            return {"success": False, "message": "Payload sinkronisasi kosong."}
+
+        synced_counts = {"murid": 0, "users": 0, "kelompok": 0, "tahun_ajaran": 0, "raport": 0}
+
+        # 1. Sync Murid
+        if "murid" in payload and isinstance(payload["murid"], list):
+            for m in payload["murid"]:
+                if m and m.get("nis"):
+                    self.save_student(m, operator)
+                    synced_counts["murid"] += 1
+
+        # 2. Sync Users
+        if "users" in payload and isinstance(payload["users"], list):
+            for u in payload["users"]:
+                if u and (u.get("userId") or u.get("username")):
+                    self.save_teacher(u, operator)
+                    synced_counts["users"] += 1
+
+        # 3. Sync Kelompok
+        if "kelompok" in payload and isinstance(payload["kelompok"], list):
+            for k in payload["kelompok"]:
+                if k and k.get("idKelompok"):
+                    self.save_class(k, operator)
+                    synced_counts["kelompok"] += 1
+
+        # 4. Sync Tahun Ajaran
+        if "tahun_ajaran" in payload and isinstance(payload["tahun_ajaran"], list):
+            for ta in payload["tahun_ajaran"]:
+                if ta and ta.get("idTahun"):
+                    self.save_academic_year(ta, operator)
+                    synced_counts["tahun_ajaran"] += 1
+
+        # 5. Sync Raport
+        if "raport" in payload and isinstance(payload["raport"], list):
+            for r in payload["raport"]:
+                if r and r.get("idRaport"):
+                    self.save_or_upload_report(r)
+                    synced_counts["raport"] += 1
+
+        self.log_activity(operator, "SYNC", "Sinkronisasi Penuh Database", f"Sinkronisasi {synced_counts['murid']} murid, {synced_counts['users']} pengguna, {synced_counts['raport']} raport.")
+        self._save_local()
+        return {"success": True, "data": synced_counts, "message": "Seluruh data lokal berhasil disinkronkan ke database server & Google Sheets."}
+
     # ================= RESET SIMULASI =================
     def reset_database(self) -> bool:
         self.db["users"] = list(DEFAULT_USERS)
@@ -623,3 +669,4 @@ class DatabaseManager:
 
 # Singleton instance
 db_manager = DatabaseManager()
+

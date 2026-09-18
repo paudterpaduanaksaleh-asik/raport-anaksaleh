@@ -157,6 +157,10 @@
       "status": "AKTIF",
       "alamat": "Jl. Flamboyan No. 18",
       "pin": "080123"
+    },
+    {
+      "nis": "2026999",
+      "namaLengkap": "Test Murid Sync"
     }
   ],
   "kelompok": [
@@ -267,6 +271,20 @@
     }
   ],
   "logs": [
+    {
+      "timestamp": "18/09/2026 06:53:33",
+      "user": "ADMIN",
+      "role": "SYNC",
+      "aktivitas": "Sinkronisasi Penuh Database",
+      "detail": "Sinkronisasi 1 murid, 0 pengguna, 0 raport."
+    },
+    {
+      "timestamp": "18/09/2026 06:53:33",
+      "user": "ADMIN",
+      "role": "ADMIN",
+      "aktivitas": "Tambah Murid",
+      "detail": "Menambahkan murid baru: Test Murid Sync (2026999)"
+    },
     {
       "timestamp": "17/09/2026 18:38:54",
       "user": "SYSTEM",

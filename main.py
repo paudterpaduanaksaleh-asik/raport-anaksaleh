@@ -272,6 +272,20 @@ async def confirm_viewed(payload: Dict[str, Any]):
         return {"success": True, "message": "Konfirmasi tanda terima berhasil dicatat."}
     raise HTTPException(status_code=404, detail="Raport tidak ditemukan.")
 
+# ================= CLOUD SYNC ENDPOINTS =================
+@app.post("/api/sync/all")
+async def sync_all_data(payload: Dict[str, Any]):
+    operator = payload.get("operator", "ADMIN")
+    data_payload = payload.get("data", payload)
+    res = db_manager.sync_all_data(data_payload, operator)
+    return res
+
+@app.get("/api/sync/pull")
+async def sync_pull_data():
+    all_data = db_manager.get_admin_all_data()
+    return {"success": True, "data": all_data, "message": "Data cloud berhasil ditarik."}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

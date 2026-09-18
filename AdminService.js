@@ -913,15 +913,55 @@ function getActivityLogsAdmin(limit) {
 }
 
 /**
- * Menyimpan Pengaturan Branding Sekolah & Logo ke Script Properties (Shared Cloud)
+ * Menyimpan Pengaturan Branding Sekolah & Logo ke Script Properties & Google Drive
  */
 function saveSchoolSettingsAdmin(settings, adminUser) {
   try {
     if (!settings) return apiResponse(false, null, "Data pengaturan kosong.");
+    
+    // Jika ada upload gambar logo baru dalam format base64
+    if (settings.logoImg && typeof settings.logoImg === 'string' && settings.logoImg.indexOf('data:image/') === 0) {
+      try {
+        var rootFolder = getOrCreateRootFolder();
+        var mimeType = "image/png";
+        var ext = "png";
+        if (settings.logoImg.indexOf('data:image/jpeg') === 0 || settings.logoImg.indexOf('data:image/jpg') === 0) {
+          mimeType = "image/jpeg";
+          ext = "jpg";
+        } else if (settings.logoImg.indexOf('data:image/svg+xml') === 0) {
+          mimeType = "image/svg+xml";
+          ext = "svg";
+        }
+        
+        var base64Data = settings.logoImg.replace(/^data:image\/[a-zA-Z0-9\+\-\.]+;base64,/, "").replace(/^data:.*;base64,/, "");
+        var decodedBytes = Utilities.base64Decode(base64Data);
+        var blob = Utilities.newBlob(decodedBytes, mimeType, "LOGO_SEKOLAH_ANAK_SALEH." + ext);
+        
+        // Hapus file logo lama di folder Drive jika ada
+        var existingLogoFiles = rootFolder.getFilesByName("LOGO_SEKOLAH_ANAK_SALEH.png");
+        while (existingLogoFiles.hasNext()) {
+          try { existingLogoFiles.next().setTrashed(true); } catch(e) {}
+        }
+        var existingLogoJpg = rootFolder.getFilesByName("LOGO_SEKOLAH_ANAK_SALEH.jpg");
+        while (existingLogoJpg.hasNext()) {
+          try { existingLogoJpg.next().setTrashed(true); } catch(e) {}
+        }
+        
+        var savedLogo = rootFolder.createFile(blob);
+        savedLogo.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        
+        var fileId = savedLogo.getId();
+        settings.logoImg = "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w500";
+        settings.logoFileId = fileId;
+      } catch (imgErr) {
+        console.warn("Gagal menyimpan logo ke Drive: " + imgErr.message);
+      }
+    }
+
     var props = PropertiesService.getScriptProperties();
     props.setProperty("SCHOOL_SETTINGS_JSON", JSON.stringify(settings));
-    logActivity(adminUser || "ADMIN", "ADMIN", "PENGATURAN SEKOLAH", "Memperbarui branding dan logo sekolah");
-    return apiResponse(true, settings, "Pengaturan dan logo sekolah berhasil disimpan ke cloud Google Apps Script.");
+    logActivity(adminUser || "ADMIN", "ADMIN", "PENGATURAN SEKOLAH", "Memperbarui branding dan logo sekolah di cloud");
+    return apiResponse(true, settings, "Pengaturan dan logo sekolah berhasil disimpan ke cloud Google Apps Script & Google Drive.");
   } catch (err) {
     return apiResponse(false, null, "Gagal menyimpan pengaturan: " + err.message);
   }
@@ -1022,4 +1062,231 @@ function deleteAcademicYearAdmin(idTahun, adminUser) {
     return apiResponse(false, null, "Gagal menghapus tahun pelajaran: " + err.message);
   }
 }
+
+/**
+ * Full Sync: Menyinkronkan seluruh data lokal (murid, guru, kelompok, TA, raport, settings) ke Google Sheets
+ */
+function syncAllDataAdmin(payload, adminUser) {
+  try {
+    if (!payload || typeof payload !== 'object') {
+      return apiResponse(false, null, "Payload sinkronisasi kosong atau tidak valid.");
+    }
+
+    var ss = getDatabaseSpreadsheet();
+    if (!ss) {
+      initialSetup();
+      ss = getDatabaseSpreadsheet();
+    }
+
+    var totalSynced = { murid: 0, users: 0, kelompok: 0, tahun_ajaran: 0, raport: 0 };
+
+    // 1. Sinkronisasi Data Murid
+    if (Array.isArray(payload.murid) && payload.murid.length > 0) {
+      var muridSheet = ss.getSheetByName("DB_Murid") || ss.getSheetByName("DB_Siswa");
+      if (muridSheet) {
+        var existingMurid = muridSheet.getDataRange().getValues();
+        var existingNisMap = {};
+        for (var i = 1; i < existingMurid.length; i++) {
+          if (existingMurid[i][0]) existingNisMap[String(existingMurid[i][0]).trim()] = i + 1;
+        }
+
+        payload.murid.forEach(function(m) {
+          if (!m || !m.nis) return;
+          var nis = String(m.nis).trim();
+          var rowValues = [
+            nis,
+            m.namaLengkap || "",
+            m.namaPanggilan || "",
+            m.jenisKelamin || "L",
+            m.jenjang || "TK-A",
+            m.idKelompok || "",
+            m.tempatLahir || "",
+            m.tanggalLahir || "",
+            m.namaAyah || "",
+            m.namaIbu || "",
+            m.kontakOrtu || "",
+            m.status || "AKTIF",
+            m.alamat || "",
+            m.pin || (m.tanggalLahir ? String(m.tanggalLahir).replace(/-/g, '') : "1234"),
+            new Date()
+          ];
+
+          if (existingNisMap[nis]) {
+            muridSheet.getRange(existingNisMap[nis], 1, 1, rowValues.length).setValues([rowValues]);
+          } else {
+            muridSheet.appendRow(rowValues);
+            existingNisMap[nis] = muridSheet.getLastRow();
+          }
+          totalSynced.murid++;
+        });
+      }
+    }
+
+    // 2. Sinkronisasi Data Users (Guru/Kepsek/Admin)
+    if (Array.isArray(payload.users) && payload.users.length > 0) {
+      var usersSheet = ss.getSheetByName("DB_Users");
+      if (usersSheet) {
+        var existingUsers = usersSheet.getDataRange().getValues();
+        var existingUserMap = {};
+        for (var j = 1; j < existingUsers.length; j++) {
+          if (existingUsers[j][0]) existingUserMap[String(existingUsers[j][0]).trim()] = j + 1;
+          if (existingUsers[j][1]) existingUserMap[String(existingUsers[j][1]).trim().toLowerCase()] = j + 1;
+        }
+
+        payload.users.forEach(function(u) {
+          if (!u || (!u.userId && !u.username)) return;
+          var uId = String(u.userId || ("USR-" + String(u.username).toUpperCase())).trim();
+          var uName = String(u.username || "").trim();
+          var rowValues = [
+            uId,
+            uName,
+            u.password || "guru123",
+            u.namaLengkap || uName,
+            u.role || "WALI_KELAS",
+            u.kelompokDiampu || "",
+            u.kontakWa || "",
+            u.status || "AKTIF",
+            new Date()
+          ];
+
+          var targetRow = existingUserMap[uId] || existingUserMap[uName.toLowerCase()];
+          if (targetRow) {
+            usersSheet.getRange(targetRow, 1, 1, rowValues.length).setValues([rowValues]);
+          } else {
+            usersSheet.appendRow(rowValues);
+            existingUserMap[uId] = usersSheet.getLastRow();
+          }
+          totalSynced.users++;
+        });
+      }
+    }
+
+    // 3. Sinkronisasi Data Kelompok
+    if (Array.isArray(payload.kelompok) && payload.kelompok.length > 0) {
+      var kelompokSheet = ss.getSheetByName("DB_Kelompok") || ss.getSheetByName("DB_Kelas");
+      if (kelompokSheet) {
+        var existingKelompok = kelompokSheet.getDataRange().getValues();
+        var existingKelMap = {};
+        for (var k = 1; k < existingKelompok.length; k++) {
+          if (existingKelompok[k][0]) existingKelMap[String(existingKelompok[k][0]).trim().toUpperCase()] = k + 1;
+        }
+
+        payload.kelompok.forEach(function(c) {
+          if (!c || !c.idKelompok) return;
+          var idK = String(c.idKelompok).trim().toUpperCase();
+          var rowValues = [
+            idK,
+            c.namaKelompok || idK,
+            c.jenjang || "TK-A",
+            c.idWaliKelas || "",
+            c.namaWaliKelas || "",
+            Number(c.kapasitas || 15),
+            c.tahunAjaran || "2025/2026",
+            c.status || "AKTIF",
+            new Date()
+          ];
+
+          if (existingKelMap[idK]) {
+            kelompokSheet.getRange(existingKelMap[idK], 1, 1, rowValues.length).setValues([rowValues]);
+          } else {
+            kelompokSheet.appendRow(rowValues);
+            existingKelMap[idK] = kelompokSheet.getLastRow();
+          }
+          totalSynced.kelompok++;
+        });
+      }
+    }
+
+    // 4. Sinkronisasi Tahun Ajaran
+    if (Array.isArray(payload.tahun_ajaran) && payload.tahun_ajaran.length > 0) {
+      var taSheet = ss.getSheetByName("DB_TahunAjaran");
+      if (taSheet) {
+        var existingTa = taSheet.getDataRange().getValues();
+        var existingTaMap = {};
+        for (var t = 1; t < existingTa.length; t++) {
+          if (existingTa[t][0]) existingTaMap[String(existingTa[t][0]).trim()] = t + 1;
+        }
+
+        payload.tahun_ajaran.forEach(function(ta) {
+          if (!ta || !ta.idTahun) return;
+          var idT = String(ta.idTahun).trim();
+          var rowValues = [
+            idT,
+            ta.namaTahun || "2025/2026",
+            ta.semester || "Ganjil (Semester 1)",
+            ta.statusAktif || "NONAKTIF",
+            ta.statusAksesOrtu || "DITUTUP"
+          ];
+
+          if (existingTaMap[idT]) {
+            taSheet.getRange(existingTaMap[idT], 1, 1, rowValues.length).setValues([rowValues]);
+          } else {
+            taSheet.appendRow(rowValues);
+            existingTaMap[idT] = taSheet.getLastRow();
+          }
+          totalSynced.tahun_ajaran++;
+        });
+      }
+    }
+
+    // 5. Sinkronisasi Data Raport
+    if (Array.isArray(payload.raport) && payload.raport.length > 0) {
+      var raportSheet = ss.getSheetByName("DB_Raport");
+      if (raportSheet) {
+        var existingRaport = raportSheet.getDataRange().getValues();
+        var existingRapMap = {};
+        for (var r = 1; r < existingRaport.length; r++) {
+          if (existingRaport[r][0]) existingRapMap[String(existingRaport[r][0]).trim()] = r + 1;
+        }
+
+        payload.raport.forEach(function(rp) {
+          if (!rp || !rp.idRaport) return;
+          var idR = String(rp.idRaport).trim();
+          var rowValues = [
+            idR,
+            rp.nis || "",
+            rp.idKelompok || "",
+            rp.tahunAjaran || "2025/2026",
+            rp.semester || "Ganjil (Semester 1)",
+            rp.fileId || "",
+            rp.urlPdf || "",
+            rp.catatanPerkembangan || "",
+            rp.statusApproval || "DIAJUKAN",
+            rp.catatanRevisi || "",
+            rp.uploaderUser || "Guru",
+            rp.reviewedBy || "",
+            rp.tanggalReview || "",
+            rp.tanggalDilihat || "",
+            rp.namaWaliKonfirmasi || "",
+            rp.sudahDilihat ? "SUDAH" : "BELUM",
+            new Date()
+          ];
+
+          if (existingRapMap[idR]) {
+            raportSheet.getRange(existingRapMap[idR], 1, 1, rowValues.length).setValues([rowValues]);
+          } else {
+            raportSheet.appendRow(rowValues);
+            existingRapMap[idR] = raportSheet.getLastRow();
+          }
+          totalSynced.raport++;
+        });
+      }
+    }
+
+    // 6. Sinkronisasi School Settings (Branding & Logo)
+    if (payload.schoolSettings && typeof payload.schoolSettings === 'object') {
+      var props = PropertiesService.getScriptProperties();
+      props.setProperty("SCHOOL_SETTINGS_JSON", JSON.stringify(payload.schoolSettings));
+    }
+
+    logActivity(adminUser || "ADMIN", "SYNC", "SINKRONISASI LENGKAP", 
+      Utilities.formatString("Sinkronisasi %d murid, %d guru, %d kelompok, %d raport", 
+        totalSynced.murid, totalSynced.users, totalSynced.kelompok, totalSynced.raport));
+
+    return apiResponse(true, totalSynced, "Seluruh data lokal berhasil disinkronkan ke Google Sheets!");
+  } catch (err) {
+    return apiResponse(false, null, "Gagal sinkronisasi data: " + err.message);
+  }
+}
+
 

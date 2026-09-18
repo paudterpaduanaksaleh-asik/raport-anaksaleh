@@ -170,6 +170,8 @@ function executeAction(action, args) {
       return confirmReportViewedByParent(args[0], args[1]);
     case 'resetDataForSimulation':
       return resetDataForSimulation();
+    case 'syncAllDataAdmin':
+      return syncAllDataAdmin(args[0], args[1]);
     case 'initialSetup':
       return initialSetup();
     default:
