@@ -51,30 +51,6 @@ uvicorn main:app --reload --port 8000
 ```
 Buka browser Anda di `http://localhost:8000`.
 
----
-
-## 🌐 Panduan Deploy ke Render.com (Gratis & Cepat)
-
-1. **Push Proyek ke GitHub**:
-   ```bash
-   git add .
-   git commit -m "feat: Python FastAPI + Tailwind CSS + Alpine.js"
-   git push origin main
-   ```
-
-2. **Buka Render.com**:
-   - Login ke [Render.com](https://render.com) dan buat **New Web Service**.
-   - Hubungkan repositori GitHub Anda: `paudterpaduanaksaleh-asik/raport-anaksaleh`.
-   - Pilih environment **Python 3**.
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-
-3. **Set Environment Variables di Render**:
-   - `SPREADSHEET_ID`: ID Google Sheets Anda
-   - `DRIVE_FOLDER_ID`: ID Folder Google Drive Anda
-   - `GOOGLE_SERVICE_ACCOUNT_JSON_RAW`: *(Opsional)* Isi string JSON dari Service Account Key.
-
-4. Klik **Deploy Web Service**. Website Anda akan langsung aktif dengan domain HTTPS gratis (contoh: `https://raport-anaksaleh.onrender.com`).
 
 ---
 
@@ -101,8 +77,6 @@ Buka browser Anda di `http://localhost:8000`.
 raport-anaksaleh/
 ├── main.py                  # Server FastAPI & REST API Endpoints
 ├── requirements.txt         # Dependensi Python (FastAPI, Uvicorn, GSpread, Google Client)
-├── render.yaml              # Konfigurasi Infrastructure-as-Code Render.com
-├── Procfile                 # File start process untuk hosting PaaS
 ├── .env.example             # Contoh file konfigurasi environment
 ├── services/
 │   ├── sheets_db.py         # Service konektor Google Sheets & Fallback Local JSON
